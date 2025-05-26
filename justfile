@@ -22,7 +22,7 @@ _nc := '\033[0m'
 # Aliases
 
 alias rj := run-jupyter
-alias rs := run-server
+alias rs := prod
 
 # ---------------------------------------------------------------------------------------------------------------------
 
@@ -36,20 +36,35 @@ run-jupyter jupyter_args="":
     uv run --frozen --with "jupyterlab" \
         jupyter lab {{ jupyter_args }}
 
-
 # ---------------------------------------------------------------------------------------------------------------------
 
-
-[group('server')]
-run-server config_path="":
+[group('dev')]
+dev config_path="":
     #!/bin/bash
     set -euo pipefail
 
-    # if the config_path is not empty string,set syftbox client config path
+    # if the config_path is not empty string, set syftbox client config path
     if [ "{{config_path}}" != "" ]; then
         echo "${_green}Using custom config path: ${config_path}${_nc}"
         export SYFTBOX_CLIENT_CONFIG_PATH="${config_path}"
     fi
-    
-    uv run  \
-        uvicorn server.main:app --reload
+
+    # concurrently run the server and frontend
+    bunx concurrently --names "server,frontend" --prefix-colors "red,green" \
+        "uv run uvicorn backend.main:app --reload --port 8001" \
+        "NEXT_PUBLIC_API_URL=http://localhost:8001 bun run --cwd frontend dev"
+
+[group('server')]
+prod config_path="":
+    #!/bin/bash
+    set -euo pipefail
+
+    # if the config_path is not empty string, set syftbox client config path
+    if [ "{{config_path}}" != "" ]; then
+        echo "${_green}Using custom config path: ${config_path}${_nc}"
+        export SYFTBOX_CLIENT_CONFIG_PATH="${config_path}"
+    fi
+
+    # build the frontend
+    bun run --cwd frontend build
+    uv run uvicorn backend.main:app

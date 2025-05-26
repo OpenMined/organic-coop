@@ -1,0 +1,186 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import {
+  Plus,
+  Users,
+  Calendar,
+  HardDrive,
+  TrendingUp,
+  Briefcase,
+  Database,
+  ChartColumn,
+} from "lucide-react";
+import { CreateDatasetModal } from "./create-dataset-modal";
+import { apiService, type Dataset } from "@/lib/api";
+import { ActivityGraph } from "./activity-graph";
+
+export function DatasetsView() {
+  const [datasets, setDatasets] = useState<Dataset[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  useEffect(() => {
+    loadDatasets();
+  }, []);
+
+  const loadDatasets = async () => {
+    try {
+      setLoading(true);
+      const response = await apiService.getDatasets();
+      setDatasets(response.datasets);
+    } catch (error) {
+      console.error("Failed to load datasets:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDatasetCreated = () => {
+    setIsModalOpen(false);
+    loadDatasets();
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-4">
+        {[...Array(3)].map((_, i) => (
+          <Card key={i} className="animate-pulse">
+            <CardHeader>
+              <div className="h-4 bg-muted rounded w-1/3"></div>
+              <div className="h-3 bg-muted rounded w-2/3"></div>
+            </CardHeader>
+            <CardContent>
+              <div className="h-20 bg-muted rounded"></div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
+
+  if (datasets.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="mx-auto max-w-md">
+          <div className="mx-auto h-12 w-12 text-muted-foreground mb-4">
+            <Database className="h-12 w-12" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-2">
+            No datasets found
+          </h3>
+          <p className="text-muted-foreground mb-6">
+            Create a new dataset to get started
+          </p>
+          <Button onClick={() => setIsModalOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create Dataset
+          </Button>
+        </div>
+        <CreateDatasetModal
+          open={isModalOpen}
+          onOpenChange={setIsModalOpen}
+          onSuccess={handleDatasetCreated}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold">Datasets</h1>
+          <p className="text-muted-foreground">
+            Manage your cooperative's data assets
+          </p>
+        </div>
+        <Button onClick={() => setIsModalOpen(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Upload Dataset
+        </Button>
+      </div>
+
+      <div className="space-y-4">
+        {datasets.map((dataset) => (
+          <Card key={dataset.id} className="hover:shadow-md transition-shadow">
+            <CardContent className="p-6">
+              <div className="flex justify-between items-start">
+                {/* Left side content */}
+                <div className="flex-1 space-y-3">
+                  {/* Title and badge */}
+                  <div className="flex items-center space-x-3">
+                    <h3 className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer">
+                      {dataset.name}
+                    </h3>
+                    <Badge
+                      variant="secondary"
+                      className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
+                    >
+                      ● {dataset.type.toUpperCase()}
+                    </Badge>
+                  </div>
+
+                  {/* Description */}
+                  <p className="text-muted-foreground text-sm">
+                    {dataset.description}
+                  </p>
+
+                  {/* Metadata row */}
+                  <div className="flex items-center space-x-6 text-sm text-muted-foreground">
+                    <div className="flex items-center space-x-1">
+                      <Users className="h-4 w-4" />
+                      <span>{dataset.permissions.length} users</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <ChartColumn className="h-4 w-4" />
+                      <span>{dataset.accessRequests} requests</span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <Calendar className="h-4 w-4" />
+                      <span>
+                        Updated{" "}
+                        {new Date(dataset.lastUpdated).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="flex items-center space-x-1">
+                      <HardDrive className="h-4 w-4" />
+                      <span>{dataset.size}</span>
+                    </div>
+                  </div>
+
+                  {/* User permissions pills */}
+                  <div className="flex flex-wrap gap-2">
+                    {dataset.permissions.map((email, index) => (
+                      <Badge
+                        key={index}
+                        variant="outline"
+                        className="text-xs bg-muted"
+                      >
+                        {email}
+                      </Badge>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Right side - Activity graph */}
+                <div className="ml-8">
+                  <ActivityGraph data={dataset.activityData} />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <CreateDatasetModal
+        open={isModalOpen}
+        onOpenChange={setIsModalOpen}
+        onSuccess={handleDatasetCreated}
+      />
+    </div>
+  );
+}
