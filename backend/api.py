@@ -1,7 +1,7 @@
 # Standard library imports
 from pathlib import Path
 import tempfile
-import shutil
+import requests
 
 # Third-party imports
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -78,7 +78,6 @@ async def create_dataset(
             real_path = Path(temp_dir) / "real"
             real_path.mkdir(parents=True, exist_ok=True)
             real_dataset_path = real_path / f"{dataset.filename}"
-
             real_dataset_path.write_bytes(dataset.file.read())
             logger.debug(f"Uploaded dataset temporarily saved to: {real_dataset_path}")
 
@@ -87,8 +86,16 @@ async def create_dataset(
             mock_path.mkdir(parents=True, exist_ok=True)
             mock_dataset_path = mock_path / f"{dataset.filename}"
 
-            shutil.copy(real_dataset_path, mock_dataset_path)
-            logger.debug(f"Mock dataset saved to: {mock_dataset_path}")
+            # Hardcoded GitHub raw CSV URL
+            github_csv_url = "https://raw.githubusercontent.com/OpenMined/datasets/refs/heads/main/enclave/crop_stock_data.csv"
+            try:
+                response = requests.get(github_csv_url)
+                response.raise_for_status()
+                mock_dataset_path.write_bytes(response.content)
+                logger.debug(f"Mock dataset downloaded  and saved to: {mock_dataset_path}")
+            except Exception as e:
+                logger.error(f"Failed to download mock dataset: {e}")
+                raise HTTPException(status_code=400, detail=f"Failed to download mock dataset from GitHub: {e}")
 
             # TODO fix None bug in syft_rds/client/local_stores/dataset.py:274 (if not Path(description_path).exists())
             dummy_description_path = Path(temp_dir) / "dummy_description.txt"
