@@ -1,7 +1,5 @@
-"use client";
+import { redirect } from "next/navigation";
 
-import Dashboard from "../dashboard";
-
-export default function Main() {
-  return <Dashboard />;
+export default function Home() {
+  redirect("/datasets");
 }

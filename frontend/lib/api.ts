@@ -1,31 +1,3 @@
-// Mock data for demonstration
-const mockJobs = [
-  {
-    id: 1,
-    projectName: "Crop Rotation Analysis",
-    description: "Analyzing optimal crop rotation patterns for increased yield",
-    requestedTime: "2 hours ago",
-    requesterEmail: "researcher@university.edu",
-    status: "pending",
-  },
-  {
-    id: 2,
-    projectName: "Pest Management Study",
-    description: "Research on organic pest control methods effectiveness",
-    requestedTime: "1 day ago",
-    requesterEmail: "entomologist@research.org",
-    status: "approved",
-  },
-  {
-    id: 3,
-    projectName: "Water Usage Optimization",
-    description: "Study on irrigation efficiency in organic farming",
-    requestedTime: "3 days ago",
-    requesterEmail: "waterexpert@consulting.com",
-    status: "denied",
-  },
-];
-
 export interface Dataset {
   id: number;
   name: string;
@@ -42,7 +14,7 @@ export interface Job {
   id: number;
   projectName: string;
   description: string;
-  requestedTime: string;
+  requestedTime: Date;
   requesterEmail: string;
   status: "pending" | "approved" | "denied";
 }
@@ -50,8 +22,8 @@ export interface Job {
 interface DatasetResponse {
   uid: string;
   createdBy: string;
-  createdAt: Date;
-  updatedAt: Date;
+  createdAt: string;
+  updatedAt: string;
   clientId: string;
   name: string;
   private: string;
@@ -71,6 +43,42 @@ interface DatasetListResponse {
   datasets: DatasetResponse[];
 }
 
+interface JobStatus {
+  pending_code_review: "pending_code_review";
+  job_run_failed: "job_run_failed";
+  job_run_finished: "job_run_finished";
+  rejected: "rejected";
+  shared: "shared";
+  approved: "approved";
+}
+
+const pendingStatuses = ["pending_code_review", "job_run_failed"] as const;
+const approvedStatuses = ["shared", "approved", "job_run_finished"] as const;
+const deniedStatuses = ["rejected"] as const;
+
+interface JobResponse {
+  uid: string;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+  clientId: string;
+  name: string;
+  description: string;
+  userCodeId: string;
+  tags: string[];
+  userMetadata: Record<string, string>;
+  status: JobStatus;
+  error: string;
+  errorMessage: string | null;
+  outputUrl: string;
+  datasetName: string;
+  enclave: string;
+}
+
+interface JobListResponse {
+  jobs: JobResponse[];
+}
+
 const getBaseUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || "";
 };
@@ -86,7 +94,7 @@ export const apiService = {
         description: dataset.summary,
         size: "1.8 MB", // TODO
         type: dataset.name.split(".")[1] || "unknown",
-        lastUpdated: dataset.updatedAt,
+        lastUpdated: new Date(dataset.updatedAt),
         accessRequests: 0,
         permissions: [],
         activityData: [1, 2, 3, 5, 8, 13, 21, 18, 14, 19, 16],
@@ -121,8 +129,25 @@ export const apiService = {
   },
 
   async getJobs(): Promise<{ jobs: Job[] }> {
-    // Simulate API delay
-    await new Promise((resolve) => setTimeout(resolve, 500));
-    return { jobs: mockJobs };
+    const response = await fetch(`${getBaseUrl()}/api/v1/jobs`);
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to fetch jobs");
+    }
+    const data: JobListResponse = await response.json();
+    return {
+      jobs: data.jobs.map((job) => ({
+        id: job.uid,
+        projectName: job.name,
+        description: job.description,
+        requestedTime: new Date(job.createdAt),
+        requesterEmail: job.createdBy,
+        status: pendingStatuses.includes(job.status)
+          ? "pending"
+          : approvedStatuses.includes(job.status)
+          ? "approved"
+          : "denied",
+      })),
+    };
   },
 };

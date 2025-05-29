@@ -17,6 +17,7 @@ import {
 import { CreateDatasetModal } from "./create-dataset-modal";
 import { apiService, type Dataset } from "@/lib/api";
 import { ActivityGraph } from "./activity-graph";
+import { timeAgo } from "@/lib/utils";
 
 export function DatasetsView() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -141,10 +142,7 @@ export function DatasetsView() {
                     </div>
                     <div className="flex items-center space-x-1">
                       <Calendar className="h-4 w-4" />
-                      <span>
-                        Updated{" "}
-                        {new Date(dataset.lastUpdated).toLocaleDateString()}
-                      </span>
+                      <span>Updated {timeAgo(dataset.lastUpdated)}</span>
                     </div>
                     <div className="flex items-center space-x-1">
                       <HardDrive className="h-4 w-4" />
