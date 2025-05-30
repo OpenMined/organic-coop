@@ -13,11 +13,20 @@ import {
   Briefcase,
   Database,
   ChartColumn,
+  Edit,
+  Trash2,
+  ExternalLink,
 } from "lucide-react";
 import { CreateDatasetModal } from "./create-dataset-modal";
 import { apiService, type Dataset } from "@/lib/api";
 import { ActivityGraph } from "./activity-graph";
 import { timeAgo } from "@/lib/utils";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function DatasetsView() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -117,12 +126,21 @@ export function DatasetsView() {
                     <h3 className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer">
                       {dataset.name}
                     </h3>
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300"
-                    >
-                      ● {dataset.type.toUpperCase()}
-                    </Badge>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <Badge
+                            variant="secondary"
+                            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900 cursor-help"
+                          >
+                            ● {dataset.type.toUpperCase()}
+                          </Badge>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Dataset format: {dataset.type.toUpperCase()}
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
 
                   {/* Description */}
@@ -132,22 +150,70 @@ export function DatasetsView() {
 
                   {/* Metadata row */}
                   <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4" />
-                      <span>{dataset.permissions.length} users</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <ChartColumn className="h-4 w-4" />
-                      <span>{dataset.accessRequests} requests</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="h-4 w-4" />
-                      <span>Updated {timeAgo(dataset.lastUpdated)}</span>
-                    </div>
-                    <div className="flex items-center space-x-1">
-                      <HardDrive className="h-4 w-4" />
-                      <span>{dataset.size}</span>
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center space-x-1 cursor-help">
+                            <Users className="h-4 w-4" />
+                            <span>
+                              {dataset.usersCount}{" "}
+                              {dataset.usersCount === 1 ? "user" : "users"}
+                            </span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {dataset.usersCount}{" "}
+                          {dataset.usersCount === 1 ? "user has" : "users have"}{" "}
+                          requested access to this dataset
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center space-x-1 cursor-help">
+                            <ChartColumn className="h-4 w-4" />
+                            <span>{dataset.requestsCount} requests</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          {dataset.requestsCount} total access
+                          {dataset.requestsCount === 1
+                            ? " request"
+                            : " requests"}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center space-x-1 cursor-help">
+                            <Calendar className="h-4 w-4" />
+                            <span>Updated {timeAgo(dataset.lastUpdated)}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          Last updated on{" "}
+                          {dataset.lastUpdated.toLocaleDateString(undefined, {
+                            year: "numeric",
+                            month: "long",
+                            day: "numeric",
+                            hour: "2-digit",
+                            minute: "2-digit",
+                          })}
+                        </TooltipContent>
+                      </Tooltip>
+
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div className="flex items-center space-x-1 cursor-help">
+                            <HardDrive className="h-4 w-4" />
+                            <span>{dataset.size}</span>
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          The dataset is {dataset.size} in size
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   </div>
 
                   {/* User permissions pills */}

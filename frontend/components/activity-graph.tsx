@@ -1,50 +1,96 @@
-"use client"
+"use client";
+
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface ActivityGraphProps {
-  data: number[]
-  className?: string
+  data: number[];
+  className?: string;
 }
 
 export function ActivityGraph({ data, className = "" }: ActivityGraphProps) {
-  const maxValue = Math.max(...data)
+  const maxValue = Math.max(...data);
 
   const getIntensity = (value: number) => {
-    if (value === 0) return 0
-    if (value <= maxValue * 0.25) return 1
-    if (value <= maxValue * 0.5) return 2
-    if (value <= maxValue * 0.75) return 3
-    return 4
-  }
+    if (value === 0) return 0;
+    if (value <= maxValue * 0.25) return 1;
+    if (value <= maxValue * 0.5) return 2;
+    if (value <= maxValue * 0.75) return 3;
+    return 4;
+  };
 
   const getColor = (intensity: number) => {
     switch (intensity) {
       case 0:
-        return "bg-muted"
+        return "bg-muted";
       case 1:
-        return "bg-green-200 dark:bg-green-900"
+        return "bg-green-200 dark:bg-green-900";
       case 2:
-        return "bg-green-300 dark:bg-green-700"
+        return "bg-green-300 dark:bg-green-700";
       case 3:
-        return "bg-green-400 dark:bg-green-600"
+        return "bg-green-400 dark:bg-green-600";
       case 4:
-        return "bg-green-500 dark:bg-green-500"
+        return "bg-green-500 dark:bg-green-500";
       default:
-        return "bg-muted"
+        return "bg-muted";
     }
-  }
+  };
+
+  const getWeekDateRange = (weekIndex: number) => {
+    const now = new Date();
+    const weeksAgo = 11 - weekIndex;
+    const endDate = new Date(now);
+    endDate.setDate(now.getDate() - weeksAgo * 7);
+    const startDate = new Date(endDate);
+    startDate.setDate(endDate.getDate() - 6);
+
+    return {
+      start: startDate.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+      end: endDate.toLocaleDateString(undefined, {
+        month: "short",
+        day: "numeric",
+      }),
+    };
+  };
 
   return (
-    <div className={`flex items-end gap-1 ${className}`}>
-      {data.map((value, index) => (
-        <div
-          key={index}
-          className={`w-3 h-12 rounded-sm ${getColor(getIntensity(value))} transition-colors hover:opacity-80`}
-          title={`Week ${index + 1}: ${value} accesses`}
-          style={{
-            height: `${Math.max(8, (value / maxValue) * 48)}px`,
-          }}
-        />
-      ))}
-    </div>
-  )
+    <TooltipProvider>
+      <div className={`flex items-end gap-1 ${className}`}>
+        {data.map((value, index) => {
+          const { start, end } = getWeekDateRange(index);
+          return (
+            <Tooltip key={index}>
+              <TooltipTrigger asChild>
+                <div className="flex items-end w-3 h-12 cursor-help">
+                  <div
+                    className={`w-full h-full rounded-sm ${getColor(
+                      getIntensity(value)
+                    )} transition-colors hover:opacity-80`}
+                    style={{
+                      height: `${Math.max(8, (value / maxValue) * 48)}px`,
+                    }}
+                  />
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                <div className="text-xs">
+                  <div className="font-medium">{value} requests</div>
+                  <div className="text-muted-foreground">
+                    {start} - {end}
+                  </div>
+                </div>
+              </TooltipContent>
+            </Tooltip>
+          );
+        })}
+      </div>
+    </TooltipProvider>
+  );
 }

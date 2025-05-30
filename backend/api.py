@@ -45,7 +45,7 @@ async def list_datasets(
 
 
 @v1_router.post(
-    "/dataset",
+    "/datasets",
     tags=["datasets"],
     status_code=201,
     summary="Create a new dataset",
@@ -92,10 +92,15 @@ async def create_dataset(
                 response = requests.get(github_csv_url)
                 response.raise_for_status()
                 mock_dataset_path.write_bytes(response.content)
-                logger.debug(f"Mock dataset downloaded  and saved to: {mock_dataset_path}")
+                logger.debug(
+                    f"Mock dataset downloaded  and saved to: {mock_dataset_path}"
+                )
             except Exception as e:
                 logger.error(f"Failed to download mock dataset: {e}")
-                raise HTTPException(status_code=400, detail=f"Failed to download mock dataset from GitHub: {e}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to download mock dataset from GitHub: {e}",
+                )
 
             # TODO fix None bug in syft_rds/client/local_stores/dataset.py:274 (if not Path(description_path).exists())
             dummy_description_path = Path(temp_dir) / "dummy_description.txt"

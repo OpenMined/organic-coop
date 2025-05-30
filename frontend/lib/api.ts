@@ -7,11 +7,14 @@ export interface Dataset {
   lastUpdated: Date;
   accessRequests: number;
   permissions: string[];
+  usersCount: number;
+  requestsCount: number;
   activityData: number[];
 }
 
 export interface Job {
   id: number;
+  datasetName: string;
   projectName: string;
   description: string;
   requestedTime: Date;
@@ -87,17 +90,56 @@ export const apiService = {
   async getDatasets(): Promise<{ datasets: Dataset[] }> {
     const response = await fetch(`${getBaseUrl()}/api/v1/datasets`);
     const data: DatasetListResponse = await response.json();
+    const jobs = await this.getJobs();
+
+    const jobMap = jobs.jobs.reduce((map, job) => {
+      const jobs = map.get(job.datasetName) || [];
+      map.set(job.datasetName, [...jobs, job]);
+      return map;
+    }, new Map<string, Job[]>());
+
+    // Get the unique users count for each dataset
+    const uniqueUsersMap = jobs.jobs.reduce((map, job) => {
+      const uniqueEmails = map.get(job.datasetName) || new Set<string>();
+      uniqueEmails.add(job.requesterEmail);
+      map.set(job.datasetName, uniqueEmails);
+      return map;
+    }, new Map<string, Set<string>>());
+
+    // Get activity data for the past 12 weeks
+    const getWeekNumber = (date: Date): number => {
+      const now = new Date();
+      const diffTime = now.getTime() - date.getTime();
+      const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7));
+      return diffWeeks;
+    };
+
+    const activityDataMap = jobs.jobs.reduce((map, job) => {
+      const weekNumber = getWeekNumber(job.requestedTime);
+      // Only consider jobs from the past 12 weeks
+      if (weekNumber >= 0 && weekNumber < 12) {
+        const currentActivity = map.get(job.datasetName) || Array(12).fill(0);
+        // weekNumber 0 is current week, so we need to reverse the index
+        currentActivity[11 - weekNumber]++;
+        map.set(job.datasetName, currentActivity);
+      }
+      return map;
+    }, new Map<string, number[]>());
+
     return {
       datasets: data.datasets.map((dataset) => ({
         id: dataset.uid,
         name: dataset.name,
         description: dataset.summary,
-        size: "1.8 MB", // TODO
-        type: dataset.name.split(".")[1] || "unknown",
+        size: "751 KB", // TODO: get actual size from dataset files
+        // TODO: get actual type from dataset files
+        type: dataset.name.split(".")[1] || "csv",
         lastUpdated: new Date(dataset.updatedAt),
         accessRequests: 0,
         permissions: [],
-        activityData: [1, 2, 3, 5, 8, 13, 21, 18, 14, 19, 16],
+        usersCount: uniqueUsersMap.get(dataset.name)?.size || 0,
+        requestsCount: jobMap.get(dataset.name)?.length || 0,
+        activityData: activityDataMap.get(dataset.name) || Array(12).fill(0),
       })),
     };
   },
@@ -106,7 +148,7 @@ export const apiService = {
     formData: FormData
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${getBaseUrl()}/api/v1/dataset`, {
+      const response = await fetch(`${getBaseUrl()}/api/v1/datasets`, {
         method: "POST",
         body: formData,
         // Important: Don't set Content-Type header - browser will set it automatically with boundary for FormData
@@ -138,6 +180,7 @@ export const apiService = {
     return {
       jobs: data.jobs.map((job) => ({
         id: job.uid,
+        datasetName: job.datasetName,
         projectName: job.name,
         description: job.description,
         requestedTime: new Date(job.createdAt),
