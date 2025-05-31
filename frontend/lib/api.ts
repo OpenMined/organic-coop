@@ -1,9 +1,12 @@
+import { formatBytes } from "./utils";
+
 export interface Dataset {
   id: number;
   name: string;
   description: string;
   size: string;
   type: string;
+  createdAt: Date;
   lastUpdated: Date;
   accessRequests: number;
   permissions: string[];
@@ -30,7 +33,9 @@ interface DatasetResponse {
   clientId: string;
   name: string;
   private: string;
+  privateSize: number;
   mock: string;
+  mockSize: number;
   summary: string;
   readme: string;
   tags: string[];
@@ -131,9 +136,9 @@ export const apiService = {
         id: dataset.uid,
         name: dataset.name,
         description: dataset.summary,
-        size: "751 KB", // TODO: get actual size from dataset files
-        // TODO: get actual type from dataset files
-        type: dataset.name.split(".")[1] || "csv",
+        size: formatBytes(dataset.privateSize),
+        type: dataset.private.split(".").pop() || "unknown",
+        createdAt: new Date(dataset.createdAt),
         lastUpdated: new Date(dataset.updatedAt),
         accessRequests: 0,
         permissions: [],

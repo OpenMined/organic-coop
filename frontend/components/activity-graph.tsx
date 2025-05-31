@@ -6,13 +6,19 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { cn } from "@/lib/utils";
 
 interface ActivityGraphProps {
   data: number[];
   className?: string;
+  fullWidth?: boolean;
 }
 
-export function ActivityGraph({ data, className = "" }: ActivityGraphProps) {
+export function ActivityGraph({
+  data,
+  className = "",
+  fullWidth = false,
+}: ActivityGraphProps) {
   const maxValue = Math.max(...data);
 
   const getIntensity = (value: number) => {
@@ -66,9 +72,14 @@ export function ActivityGraph({ data, className = "" }: ActivityGraphProps) {
         {data.map((value, index) => {
           const { start, end } = getWeekDateRange(index);
           return (
-            <Tooltip key={index}>
+            <Tooltip key={index} delayDuration={0}>
               <TooltipTrigger asChild>
-                <div className="flex items-end w-3 h-12 cursor-help">
+                <div
+                  className={cn(
+                    "flex items-end h-12",
+                    fullWidth ? "w-full" : "w-3"
+                  )}
+                >
                   <div
                     className={`w-full h-full rounded-sm ${getColor(
                       getIntensity(value)

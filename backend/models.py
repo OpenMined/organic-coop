@@ -1,4 +1,4 @@
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel, ConfigDict, Field
 from pydantic.alias_generators import to_camel
 from typing import List
 
@@ -14,7 +14,8 @@ class BaseSchema(BaseModel):
 
 
 class Dataset(BaseSchema, SyftDataset):
-    pass
+    private_size: str = Field(default="0 B")
+    mock_size: str = Field(default="0 B")
 
 
 class Job(BaseSchema, SyftJob):

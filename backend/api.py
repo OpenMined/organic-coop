@@ -7,6 +7,7 @@ import requests
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from loguru import logger
 from syft_core import Client
+from syft_core.url import SyftBoxURL
 from syft_rds import init_session
 
 # Local imports
@@ -37,8 +38,25 @@ async def list_datasets(
 ) -> ListDatasetsResponse:
     try:
         datasite_client = init_session(client.email)
-        datasets = datasite_client.dataset.get_all()
-        return {"datasets": datasets}
+        datasets = [
+            DatasetModel.model_validate(dataset)
+            for dataset in datasite_client.dataset.get_all()
+        ]
+        # TODO: temporary fix - rds' .dataset.create() doesn't take individual files as private and mock inputs
+        # Also a None readme is not allowed. So manually fixing them here.
+        for dataset in datasets:
+            private_file_path = next(dataset.private_path.iterdir(), None)
+            dataset.private = SyftBoxURL.from_path(private_file_path, client.workspace)
+            mock_file_path = next(dataset.mock_path.iterdir(), None)
+            dataset.mock = SyftBoxURL.from_path(mock_file_path, client.workspace)
+            dataset.readme = None
+            dataset.private_size = (
+                private_file_path.stat().st_size if private_file_path else "1 B"
+            )
+            dataset.mock_size = (
+                mock_file_path.stat().st_size if mock_file_path else "1 B"
+            )
+        return ListDatasetsResponse(datasets=datasets)
     except Exception as e:
         logger.error(f"Error listing datasets: {e}")
         raise HTTPException(status_code=500, detail=str(e))
@@ -134,7 +152,7 @@ async def list_jobs(
     try:
         datasite_client = init_session(client.email)
         jobs = datasite_client.jobs.get_all()
-        return {"jobs": jobs}
+        return ListJobsResponse(jobs=jobs)
     except Exception as e:
         logger.error(f"Error listing jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e))

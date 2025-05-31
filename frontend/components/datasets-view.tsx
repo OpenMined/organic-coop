@@ -1,26 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+// React
+import { useEffect, useState } from "react";
+
+// Components
+import { ActivityGraph } from "@/components/activity-graph";
+import { CreateDatasetModal } from "@/components/create-dataset-modal";
+import { DatasetActionsSheet } from "@/components/dataset-actions-sheet";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import {
-  Plus,
-  Users,
-  Calendar,
-  HardDrive,
-  TrendingUp,
-  Briefcase,
-  Database,
-  ChartColumn,
-  Edit,
-  Trash2,
-  ExternalLink,
-} from "lucide-react";
-import { CreateDatasetModal } from "./create-dataset-modal";
-import { apiService, type Dataset } from "@/lib/api";
-import { ActivityGraph } from "./activity-graph";
-import { timeAgo } from "@/lib/utils";
 import {
   Tooltip,
   TooltipContent,
@@ -28,10 +17,31 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 
+// Icons
+import {
+  Briefcase,
+  Calendar,
+  ChartColumn,
+  Database,
+  Edit,
+  ExternalLink,
+  HardDrive,
+  Plus,
+  Trash2,
+  TrendingUp,
+  Users,
+} from "lucide-react";
+
+// Utils
+import { apiService, type Dataset } from "@/lib/api";
+import { timeAgo } from "@/lib/utils";
+
 export function DatasetsView() {
   const [datasets, setDatasets] = useState<Dataset[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
+  const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
 
   useEffect(() => {
     loadDatasets();
@@ -52,6 +62,16 @@ export function DatasetsView() {
   const handleDatasetCreated = () => {
     setIsModalOpen(false);
     loadDatasets();
+  };
+
+  const handleDatasetClick = (dataset: Dataset) => {
+    setSelectedDataset(dataset);
+    setIsActionsSheetOpen(true);
+  };
+
+  const handleActionsSheetClose = () => {
+    setIsActionsSheetOpen(false);
+    setSelectedDataset(null);
   };
 
   if (loading) {
@@ -123,15 +143,18 @@ export function DatasetsView() {
                 <div className="flex-1 space-y-3">
                   {/* Title and badge */}
                   <div className="flex items-center space-x-3">
-                    <h3 className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer">
+                    <h3
+                      className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer"
+                      onClick={() => handleDatasetClick(dataset)}
+                    >
                       {dataset.name}
                     </h3>
-                    <TooltipProvider>
+                    <TooltipProvider delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Badge
                             variant="secondary"
-                            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900 cursor-help"
+                            className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900"
                           >
                             ● {dataset.type.toUpperCase()}
                           </Badge>
@@ -149,13 +172,13 @@ export function DatasetsView() {
                   </p>
 
                   {/* Metadata row */}
-                  <div className="flex items-center space-x-6 text-sm text-muted-foreground">
-                    <TooltipProvider>
+                  <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-muted-foreground">
+                    <TooltipProvider delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center space-x-1 cursor-help">
-                            <Users className="h-4 w-4" />
-                            <span>
+                          <div className="flex items-center space-x-1">
+                            <Users className="h-4 w-4 shrink-0" />
+                            <span className="whitespace-nowrap">
                               {dataset.usersCount}{" "}
                               {dataset.usersCount === 1 ? "user" : "users"}
                             </span>
@@ -167,12 +190,16 @@ export function DatasetsView() {
                           requested access to this dataset
                         </TooltipContent>
                       </Tooltip>
+                    </TooltipProvider>
 
+                    <TooltipProvider delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center space-x-1 cursor-help">
-                            <ChartColumn className="h-4 w-4" />
-                            <span>{dataset.requestsCount} requests</span>
+                          <div className="flex items-center space-x-1">
+                            <ChartColumn className="h-4 w-4 shrink-0" />
+                            <span className="whitespace-nowrap">
+                              {dataset.requestsCount} requests
+                            </span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -182,12 +209,16 @@ export function DatasetsView() {
                             : " requests"}
                         </TooltipContent>
                       </Tooltip>
+                    </TooltipProvider>
 
+                    <TooltipProvider delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center space-x-1 cursor-help">
-                            <Calendar className="h-4 w-4" />
-                            <span>Updated {timeAgo(dataset.lastUpdated)}</span>
+                          <div className="flex items-center space-x-1">
+                            <Calendar className="h-4 w-4 shrink-0" />
+                            <span className="whitespace-nowrap">
+                              Updated {timeAgo(dataset.lastUpdated)}
+                            </span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -201,12 +232,16 @@ export function DatasetsView() {
                           })}
                         </TooltipContent>
                       </Tooltip>
+                    </TooltipProvider>
 
+                    <TooltipProvider delayDuration={0}>
                       <Tooltip>
                         <TooltipTrigger asChild>
-                          <div className="flex items-center space-x-1 cursor-help">
-                            <HardDrive className="h-4 w-4" />
-                            <span>{dataset.size}</span>
+                          <div className="flex items-center space-x-1">
+                            <HardDrive className="h-4 w-4 shrink-0" />
+                            <span className="whitespace-nowrap">
+                              {dataset.size}
+                            </span>
                           </div>
                         </TooltipTrigger>
                         <TooltipContent>
@@ -243,6 +278,13 @@ export function DatasetsView() {
       <CreateDatasetModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
+        onSuccess={handleDatasetCreated}
+      />
+
+      <DatasetActionsSheet
+        dataset={selectedDataset}
+        open={isActionsSheetOpen}
+        onOpenChange={handleActionsSheetClose}
         onSuccess={handleDatasetCreated}
       />
     </div>
