@@ -213,9 +213,10 @@ async def list_jobs(
 )
 async def auto_approve(
     client: Client = Depends(get_client),
+    settings: Settings = Depends(get_settings),
     datasite_name: str = Form(..., description="Name of the datasite to add to auto-approve list"),
 ) -> JSONResponse:
-    auto_approve_file = get_auto_approve_file(client)
+    auto_approve_file = get_auto_approve_file(client, settings)
     auto_approve_datasites = auto_approve_file.get("datasites", [])
     if datasite_name not in auto_approve_datasites:
         auto_approve_datasites.append(datasite_name)
@@ -231,7 +232,7 @@ async def auto_approve(
             ))
             logger.debug(f"Updated dataset {updated_dataset.name} with auto-approval for {auto_approve_datasites}")
 
-        save_auto_approve_file(client, auto_approve_file)
+        save_auto_approve_file(client,settings, auto_approve_file)
         logger.debug(f"Added {datasite_name} to auto-approve list")
         return JSONResponse(
             content={"message": f"{datasite_name} added to auto-approve list"},
@@ -250,11 +251,12 @@ async def auto_approve(
 )
 async def get_auto_approve_list(
     client: Client = Depends(get_client),
+    settings: Settings = Depends(get_settings),
 ) -> ListAutoApproveResponse:
     """
     Get the list of datasites that are auto-approved.
     """
-    auto_approve_file = get_auto_approve_file(client)
+    auto_approve_file = get_auto_approve_file(client, settings)
     return ListAutoApproveResponse(
         auto_approve=auto_approve_file.get("datasites", [])
     )
