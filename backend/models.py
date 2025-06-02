@@ -28,3 +28,6 @@ class ListDatasetsResponse(BaseSchema):
 
 class ListJobsResponse(BaseSchema):
     jobs: List[Job]
+
+class ListAutoApproveResponse(BaseSchema):
+    auto_approve: List[str]

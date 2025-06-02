@@ -2,6 +2,7 @@
 import json
 from pathlib import Path
 import tempfile
+from fastapi.responses import JSONResponse
 import requests
 
 # Third-party imports
@@ -10,10 +11,14 @@ from loguru import logger
 from syft_core import Client
 from syft_core.url import SyftBoxURL
 from syft_rds import init_session
+from syft_rds.models.models import DatasetUpdate
+
 
 # Local imports
 from .config import Settings, get_settings
 from .models import ListDatasetsResponse, ListJobsResponse, Dataset as DatasetModel
+from .models import ListAutoApproveResponse
+from .utils import get_auto_approve_file, save_auto_approve_file
 
 
 # Dependency for getting client
@@ -27,6 +32,7 @@ async def get_client(settings: Settings = Depends(get_settings)) -> Client:
 
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_client)])
 
+# --------------- Dataset Endpoints ---------------
 
 @v1_router.get(
     "/datasets",
@@ -160,15 +166,22 @@ async def update_dataset(
 async def delete_dataset(
     dataset_name: str,
     client: Client = Depends(get_client),
-) -> dict[str, str]:
+) -> JSONResponse:
     try:
         datasite_client = init_session(client.email)
         datasite_client.dataset.delete(dataset_name)
         logger.debug(f"Dataset {dataset_name} deleted successfully")
-        return {"message": f"Dataset {dataset_name} deleted successfully"}
+        return JSONResponse(
+            content={"message": f"Dataset {dataset_name} deleted successfully"},
+            status_code=200,
+        )
     except Exception as e:
         logger.error(f"Error deleting dataset {dataset_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+# -----------------------------------------------
+
+# --------------- Job Endpoints ---------------
 
 
 @v1_router.get(
@@ -187,44 +200,11 @@ async def list_jobs(
     except Exception as e:
         logger.error(f"Error listing jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-def get_auto_approve_file(client: Client) -> dict[str, str]:
-    """
-    Get the path to the auto-approve file.
-    If it doesn't exist, create it.
-    """
-    settings = get_settings()
-    approve_file_path = client.app_data(settings.app_name) / "auto_approve.json"
-    approve_file_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
-    if not approve_file_path.exists():
-        approve_file_path.write_text("{}")  # Initialize with an empty JSON object
     
-    # read the file and return it as a dictionary
-    try:
-        with open(approve_file_path, "r") as file:
-            return json.load(file)
-    except json.JSONDecodeError:
-        logger.error("Failed to decode JSON from auto-approve file, returning empty dict")
-        return {}
-    except Exception as e:
-        logger.error(f"Error reading auto-approve file: {e}")
-        raise HTTPException(status_code=500, detail="Failed to read auto-approve file")
+# ---------------------------------------------------------------
     
-def save_auto_approve_file(client: Client, data: dict[str, str]) -> None:
-    """
-    Save the auto-approve data to the file.
-    """
-    settings = get_settings()
-    approve_file_path = client.app_data(settings.app_name) / "auto_approve.json"
-    try:
-        with open(approve_file_path, "w") as file:
-            json.dump(data, file, indent=4)
-        logger.debug(f"Auto-approve data saved to {approve_file_path}")
-    except Exception as e:
-        logger.error(f"Error saving auto-approve file: {e}")
-        raise HTTPException(status_code=500, detail="Failed to save auto-approve file")
+# -------------------- Auto-approve Endpoints --------------------
 
-# Auto-Approve Endpoints
 @v1_router.post(
     "/auto-approve",
     tags=["auto-approve"],
@@ -234,10 +214,7 @@ def save_auto_approve_file(client: Client, data: dict[str, str]) -> None:
 async def auto_approve(
     client: Client = Depends(get_client),
     datasite_name: str = Form(..., description="Name of the datasite to add to auto-approve list"),
-) -> dict[str, str]:
-    # Lazy import
-    from syft_rds.models.models import DatasetUpdate
-
+) -> JSONResponse:
     auto_approve_file = get_auto_approve_file(client)
     auto_approve_datasites = auto_approve_file.get("datasites", [])
     if datasite_name not in auto_approve_datasites:
@@ -256,6 +233,10 @@ async def auto_approve(
 
         save_auto_approve_file(client, auto_approve_file)
         logger.debug(f"Added {datasite_name} to auto-approve list")
+        return JSONResponse(
+            content={"message": f"{datasite_name} added to auto-approve list"},
+            status_code=200,
+        )
     else:
         logger.debug(f"{datasite_name} is already in the auto-approve list")
 
@@ -264,17 +245,21 @@ async def auto_approve(
     "/auto-approve",
     tags=["auto-approve"],
     summary="Get the auto-approve list",
+    response_model=ListAutoApproveResponse,
     description="Retrieve the list of datasites that are auto-approved",
 )
 async def get_auto_approve_list(
     client: Client = Depends(get_client),
-) -> dict[str, list[str]]:
+) -> ListAutoApproveResponse:
     """
     Get the list of datasites that are auto-approved.
     """
     auto_approve_file = get_auto_approve_file(client)
-    return {"datasites": auto_approve_file.get("datasites", [])}
+    return ListAutoApproveResponse(
+        auto_approve=auto_approve_file.get("datasites", [])
+    )
 
+# ------------------------------------------------
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(v1_router)
