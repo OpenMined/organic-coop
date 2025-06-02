@@ -138,6 +138,26 @@ async def create_dataset(
     except Exception as e:
         logger.error(f"Error creating dataset: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+    
+
+@v1_router.delete(
+    "/datasets/{dataset_name}",
+    tags=["datasets"],
+    summary="Delete a dataset",
+    description="Delete a dataset by its name",
+)
+async def delete_dataset(
+    dataset_name: str,
+    client: Client = Depends(get_client),
+) -> dict[str, str]:
+    try:
+        datasite_client = init_session(client.email)
+        datasite_client.dataset.delete(dataset_name)
+        logger.debug(f"Dataset {dataset_name} deleted successfully")
+        return {"message": f"Dataset {dataset_name} deleted successfully"}
+    except Exception as e:
+        logger.error(f"Error deleting dataset {dataset_name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @v1_router.get(
