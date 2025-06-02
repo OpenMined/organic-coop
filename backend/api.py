@@ -1,4 +1,5 @@
 # Standard library imports
+import json
 from pathlib import Path
 import tempfile
 import requests
@@ -138,7 +139,17 @@ async def create_dataset(
     except Exception as e:
         logger.error(f"Error creating dataset: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+@v1_router.put(
+    "/datasets/{dataset_name}",
+    tags=["datasets"],
+    summary="Update a dataset",
+    description="Update an existing dataset by its name",
+)
+async def update_dataset(
+    dataset_name: str,
+):
+    pass
 
 @v1_router.delete(
     "/datasets/{dataset_name}",
@@ -176,6 +187,79 @@ async def list_jobs(
     except Exception as e:
         logger.error(f"Error listing jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+def get_auto_approve_file(client: Client) -> dict[str, str]:
+    """
+    Get the path to the auto-approve file.
+    If it doesn't exist, create it.
+    """
+    settings = get_settings()
+    approve_file_path = client.app_data(settings.app_name) / "auto_approve.json"
+    approve_file_path.parent.mkdir(parents=True, exist_ok=True)  # Ensure the directory exists
+    if not approve_file_path.exists():
+        approve_file_path.write_text("{}")  # Initialize with an empty JSON object
+    
+    # read the file and return it as a dictionary
+    try:
+        with open(approve_file_path, "r") as file:
+            return json.load(file)
+    except json.JSONDecodeError:
+        logger.error("Failed to decode JSON from auto-approve file, returning empty dict")
+        return {}
+    except Exception as e:
+        logger.error(f"Error reading auto-approve file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to read auto-approve file")
+    
+def save_auto_approve_file(client: Client, data: dict[str, str]) -> None:
+    """
+    Save the auto-approve data to the file.
+    """
+    settings = get_settings()
+    approve_file_path = client.app_data(settings.app_name) / "auto_approve.json"
+    try:
+        with open(approve_file_path, "w") as file:
+            json.dump(data, file, indent=4)
+        logger.debug(f"Auto-approve data saved to {approve_file_path}")
+    except Exception as e:
+        logger.error(f"Error saving auto-approve file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save auto-approve file")
+
+# Auto-Approve Endpoints
+@v1_router.post(
+    "/auto-approve",
+    tags=["auto-approve"],
+    summary="Adds datasite to Auto-approve list ",
+    description=" Adds the datasite to the auto-approve list",
+)
+async def auto_approve(
+    client: Client = Depends(get_client),
+    datasite_name: str = Form(..., description="Name of the datasite to add to auto-approve list"),
+) -> dict[str, str]:
+    auto_approve_file = get_auto_approve_file(client)
+    auto_approve_datasites = auto_approve_file.get("datasites", [])
+    if datasite_name not in auto_approve_datasites:
+        auto_approve_datasites.append(datasite_name)
+        auto_approve_file["datasites"] = auto_approve_datasites
+        save_auto_approve_file(client, auto_approve_file)
+        logger.debug(f"Added {datasite_name} to auto-approve list")
+    else:
+        logger.debug(f"{datasite_name} is already in the auto-approve list")
+
+
+@v1_router.get(
+    "/auto-approve",
+    tags=["auto-approve"],
+    summary="Get the auto-approve list",
+    description="Retrieve the list of datasites that are auto-approved",
+)
+async def get_auto_approve_list(
+    client: Client = Depends(get_client),
+) -> dict[str, list[str]]:
+    """
+    Get the list of datasites that are auto-approved.
+    """
+    auto_approve_file = get_auto_approve_file(client)
+    return {"datasites": auto_approve_file.get("datasites", [])}
 
 
 api_router = APIRouter(prefix="/api")

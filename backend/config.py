@@ -10,6 +10,7 @@ class Settings(BaseSettings):
     """Application settings."""
 
     app_version: str = "0.1.0"
+    app_name: str = "enclave"
     debug: bool = True
 
     # Client settings
