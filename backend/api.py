@@ -235,11 +235,25 @@ async def auto_approve(
     client: Client = Depends(get_client),
     datasite_name: str = Form(..., description="Name of the datasite to add to auto-approve list"),
 ) -> dict[str, str]:
+    # Lazy import
+    from syft_rds.models.models import DatasetUpdate
+
     auto_approve_file = get_auto_approve_file(client)
     auto_approve_datasites = auto_approve_file.get("datasites", [])
     if datasite_name not in auto_approve_datasites:
         auto_approve_datasites.append(datasite_name)
         auto_approve_file["datasites"] = auto_approve_datasites
+
+        # Update datasets with the auto-approve datasites
+        datasite_client = init_session(client.email)
+        datasets = datasite_client.dataset.get_all()
+        for dataset in datasets:
+            updated_dataset = datasite_client.dataset.update(DatasetUpdate(
+                uid=dataset.uid,
+                auto_approval=auto_approve_datasites,
+            ))
+            logger.debug(f"Updated dataset {updated_dataset.name} with auto-approval for {auto_approve_datasites}")
+
         save_auto_approve_file(client, auto_approve_file)
         logger.debug(f"Added {datasite_name} to auto-approve list")
     else:
