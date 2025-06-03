@@ -12,21 +12,28 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Check, X, Eye, Plus, Settings, Briefcase } from "lucide-react";
+import {
+  Check,
+  X,
+  Eye,
+  Plus,
+  Settings,
+  Briefcase,
+  Loader2,
+} from "lucide-react";
 import { apiService, type Job } from "@/lib/api";
 import { timeAgo } from "@/lib/utils";
 
 export function JobsView() {
   const [jobs, setJobs] = useState<Job[]>([]);
   const [loading, setLoading] = useState(true);
-  const [autoApprovalEmails, setAutoApprovalEmails] = useState<string[]>([
-    "trusted@organic.coop",
-    "researcher@university.edu",
-  ]);
+  const [autoApprovalEmails, setAutoApprovalEmails] = useState<string[]>([]);
   const [newEmail, setNewEmail] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     loadJobs();
+    loadAutoApprovalList();
   }, []);
 
   const loadJobs = async () => {
@@ -41,15 +48,44 @@ export function JobsView() {
     }
   };
 
-  const addAutoApprovalEmail = () => {
-    if (newEmail && !autoApprovalEmails.includes(newEmail)) {
-      setAutoApprovalEmails([...autoApprovalEmails, newEmail]);
-      setNewEmail("");
+  const loadAutoApprovalList = async () => {
+    try {
+      const { datasites } = await apiService.getAutoApprovedDatasites();
+      setAutoApprovalEmails(datasites);
+    } catch (error) {
+      console.error("Failed to load auto-approval list:", error);
     }
   };
 
-  const removeAutoApprovalEmail = (email: string) => {
-    setAutoApprovalEmails(autoApprovalEmails.filter((e) => e !== email));
+  const addAutoApprovalEmail = async () => {
+    if (!newEmail || autoApprovalEmails.includes(newEmail)) return;
+
+    setIsLoading(true);
+    try {
+      // Add the new email to the list and send the entire list
+      const updatedList = [...autoApprovalEmails, newEmail];
+      await apiService.setAutoApprovedDatasites(updatedList);
+      setAutoApprovalEmails(updatedList);
+      setNewEmail("");
+    } catch (error) {
+      console.error("Failed to update auto-approve list:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const removeAutoApprovalEmail = async (email: string) => {
+    setIsLoading(true);
+    try {
+      // Remove the email from the list and send the updated list
+      const updatedList = autoApprovalEmails.filter((e) => e !== email);
+      await apiService.setAutoApprovedDatasites(updatedList);
+      setAutoApprovalEmails(updatedList);
+    } catch (error) {
+      console.error("Failed to update auto-approve list:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleJobAction = (jobId: number, action: "approve" | "deny") => {
@@ -112,37 +148,48 @@ export function JobsView() {
             Auto-approval Settings
           </CardTitle>
           <CardDescription>
-            Automatically approve requests from trusted email addresses
+            Automatically approve requests from trusted datasites
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex space-x-2">
             <div className="flex-1">
-              <Label htmlFor="email">Add trusted email</Label>
+              <Label htmlFor="datasite">Add trusted datasite email</Label>
               <Input
-                id="email"
-                type="email"
-                placeholder="researcher@university.edu"
+                id="datasite"
+                placeholder="trusted@email.com"
                 value={newEmail}
+                type="email"
+                autoComplete="off"
                 onChange={(e) => setNewEmail(e.target.value)}
                 onKeyPress={(e) => e.key === "Enter" && addAutoApprovalEmail()}
+                disabled={isLoading}
               />
             </div>
-            <Button onClick={addAutoApprovalEmail} className="mt-6">
-              <Plus className="h-4 w-4" />
+            <Button
+              onClick={addAutoApprovalEmail}
+              className="mt-6"
+              disabled={isLoading || !newEmail}
+            >
+              {isLoading ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Plus className="h-4 w-4" />
+              )}
             </Button>
           </div>
           <div className="flex flex-wrap gap-2">
-            {autoApprovalEmails.map((email, index) => (
+            {autoApprovalEmails.map((datasite_email) => (
               <Badge
-                key={index}
+                key={datasite_email}
                 variant="secondary"
                 className="flex items-center gap-1"
               >
-                {email}
+                {datasite_email}
                 <button
-                  onClick={() => removeAutoApprovalEmail(email)}
+                  onClick={() => removeAutoApprovalEmail(datasite_email)}
                   className="ml-1 hover:text-destructive"
+                  disabled={isLoading}
                 >
                   <X className="h-3 w-3" />
                 </button>

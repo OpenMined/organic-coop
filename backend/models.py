@@ -35,4 +35,4 @@ class ListJobsResponse(BaseSchema):
 
 
 class ListAutoApproveResponse(BaseSchema):
-    auto_approve: List[str]
+    datasites: List[str]

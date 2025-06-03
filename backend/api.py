@@ -5,13 +5,14 @@ from fastapi.responses import JSONResponse
 import requests
 
 # Third-party imports
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Body
 from loguru import logger
 from syft_core import Client
 from syft_core.url import SyftBoxURL
 from syft_rds import init_session
 from syft_rds.models.models import DatasetUpdate
 from filelock import FileLock
+from typing import List
 
 
 # Local imports
@@ -19,9 +20,9 @@ from .config import Settings, get_settings
 from .models import ListDatasetsResponse, ListJobsResponse, Dataset as DatasetModel
 from .models import ListAutoApproveResponse
 from .utils import (
-    get_auto_approve_file,
+    get_auto_approve_list,
     get_auto_approve_file_path,
-    save_auto_approve_file,
+    save_auto_approve_list,
 )
 
 
@@ -216,17 +217,15 @@ async def list_jobs(
 
 
 @v1_router.post(
-    "/auto-approve",
+    "/auto-approved-datasites",
     tags=["auto-approve"],
-    summary="Adds datasite to Auto-approve list ",
-    description=" Adds the datasite to the auto-approve list",
+    summary="Sets the auto-approve list",
+    description="Sets the list of emails that are auto-approved. This will replace the existing list.",
 )
-async def auto_approve(
+async def set_auto_approved_datasites(
     client: Client = Depends(get_client),
     settings: Settings = Depends(get_settings),
-    datasite_name: str = Form(
-        ..., description="Name of the datasite to add to auto-approve list"
-    ),
+    datasites: List[str] = Body(..., description="List of emails to auto-approve"),
 ) -> JSONResponse:
     # Create a lock file path based on the auto-approve file path
     lock_file_path = get_auto_approve_file_path(client, settings).with_suffix(".lock")
@@ -235,61 +234,54 @@ async def auto_approve(
     try:
         # Acquire the lock before modifying the file
         with file_lock:
-            auto_approve_file = get_auto_approve_file(client, settings)
-            auto_approve_datasites = auto_approve_file.get("datasites", [])
-            if datasite_name not in auto_approve_datasites:
-                auto_approve_datasites.append(datasite_name)
-                auto_approve_file["datasites"] = auto_approve_datasites
+            # Clean the email list (remove empty strings and whitespace)
+            datasites = [datasite.strip() for datasite in datasites if datasite.strip()]
 
-                # Update datasets with the auto-approve datasites
-                datasite_client = init_session(client.email)
-                datasets = datasite_client.dataset.get_all()
-                for dataset in datasets:
-                    updated_dataset = datasite_client.dataset.update(
-                        DatasetUpdate(
-                            uid=dataset.uid,
-                            auto_approval=auto_approve_datasites,
-                        )
-                    )
-                    logger.debug(
-                        f"Updated dataset {updated_dataset.name} with auto-approval for {auto_approve_datasites}"
-                    )
+            # Update the auto-approve file with the new list
+            save_auto_approve_list(client, settings, datasites)
 
-                save_auto_approve_file(client, settings, auto_approve_file)
-                logger.debug(f"Added {datasite_name} to auto-approve list")
-                return JSONResponse(
-                    content={"message": f"{datasite_name} added to auto-approve list"},
-                    status_code=200,
+            # Update datasets with the new auto-approve list
+            datasite_client = init_session(client.email)
+            datasets = datasite_client.dataset.get_all()
+            for dataset in datasets:
+                updated_dataset = datasite_client.dataset.update(
+                    DatasetUpdate(
+                        uid=dataset.uid,
+                        auto_approval=datasites,
+                    )
                 )
-            else:
-                logger.debug(f"{datasite_name} is already in the auto-approve list")
-                return JSONResponse(
-                    content={
-                        "message": f"{datasite_name} is already in the auto-approve list"
-                    },
-                    status_code=200,
+                logger.debug(
+                    f"Updated dataset {updated_dataset.name} with auto-approval for {datasites}"
                 )
+
+            logger.debug(f"Updated auto-approve list with {len(datasites)} emails")
+            return JSONResponse(
+                content={
+                    "message": f"Auto-approve list updated with {len(datasites)} emails"
+                },
+                status_code=200,
+            )
     except Exception as e:
         logger.error(f"Error in auto-approve operation: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
 @v1_router.get(
-    "/auto-approve",
+    "/auto-approved-datasites",
     tags=["auto-approve"],
     summary="Get the auto-approve list",
     response_model=ListAutoApproveResponse,
     description="Retrieve the list of datasites that are auto-approved",
 )
-async def get_auto_approve_list(
+async def get_auto_approved_datasites(
     client: Client = Depends(get_client),
     settings: Settings = Depends(get_settings),
 ) -> ListAutoApproveResponse:
     """
     Get the list of datasites that are auto-approved.
     """
-    auto_approve_file = get_auto_approve_file(client, settings)
-    return ListAutoApproveResponse(auto_approve=auto_approve_file.get("datasites", []))
+    auto_approved_datasites = get_auto_approve_list(client, settings)
+    return ListAutoApproveResponse(datasites=auto_approved_datasites)
 
 
 # ------------------------------------------------

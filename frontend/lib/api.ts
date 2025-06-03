@@ -87,6 +87,10 @@ interface JobListResponse {
   jobs: JobResponse[];
 }
 
+interface AutoApproveResponse {
+  datasites: string[];
+}
+
 const getBaseUrl = () => {
   return process.env.NEXT_PUBLIC_API_URL || "";
 };
@@ -197,5 +201,40 @@ export const apiService = {
           : "denied",
       })),
     };
+  },
+
+  async getAutoApprovedDatasites(): Promise<{ datasites: string[] }> {
+    const response = await fetch(
+      `${getBaseUrl()}/api/v1/auto-approved-datasites`
+    );
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to fetch auto-approve list");
+    }
+    const data: AutoApproveResponse = await response.json();
+    return data;
+  },
+
+  async setAutoApprovedDatasites(
+    datasites: string[]
+  ): Promise<{ message: string }> {
+    const response = await fetch(
+      `${getBaseUrl()}/api/v1/auto-approved-datasites`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(datasites),
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error || "Failed to update auto-approve list");
+    }
+
+    const data = await response.json();
+    return data;
   },
 };
