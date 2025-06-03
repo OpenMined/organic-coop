@@ -1,42 +1,57 @@
 # Standard library imports
+import json
 from pathlib import Path
-import os
-import shutil
-import tempfile
+
+# Third-party imports
+from fastapi import HTTPException
+from loguru import logger
+from syft_core import Client
+
+# Local imports
+from backend.config import Settings
 
 
-def save_uploads_to_temp(upload, allow_multiple=False):
+def get_auto_approve_file_path(client: Client, settings: Settings) -> Path:
+    return client.app_data() / "auto_approve.json"
+
+
+def get_auto_approve_list(client: Client, settings: Settings) -> list[str]:
     """
-    Save one or more UploadFile(s) to a temp directory or file.
-    If allow_multiple is True, expects a list of UploadFile and returns a temp dir path.
-    If allow_multiple is False, expects a single UploadFile and returns a file path.
-    Returns only the path to the temp dir or file.
-    If a folder is selected, returns the path to the folder itself (not the parent temp dir).
+    Get the path to the auto-approve file.
+    If it doesn't exist, create it.
     """
-    if allow_multiple:
-        # Try to find the common root folder from the uploaded files
-        filenames = [up.filename for up in upload]
-        # Remove any leading slashes
-        filenames = [f.lstrip(os.sep) for f in filenames]
-        # Find the common prefix (folder)
-        common_prefix = os.path.commonprefix(filenames)
-        # If the common prefix is a partial folder name, trim to the last full folder
-        if common_prefix and not common_prefix.endswith(os.sep):
-            common_prefix = os.path.dirname(common_prefix)
-        temp_dir = tempfile.mkdtemp()
-        for up in upload:
-            file_path = os.path.join(temp_dir, up.filename)
-            os.makedirs(os.path.dirname(file_path), exist_ok=True)
-            with open(file_path, "wb") as f:
-                shutil.copyfileobj(up.file, f)
-        # If a folder was selected, return the path to that folder inside temp_dir
-        if common_prefix:
-            folder_path = os.path.join(temp_dir, common_prefix)
-            if os.path.isdir(folder_path):
-                return folder_path
-        return temp_dir  # fallback: return the temp dir
-    else:
-        suffix = Path(upload.filename).suffix
-        with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-            shutil.copyfileobj(upload.file, tmp)
-            return tmp.name  # Only return the file path
+    approve_file_path = get_auto_approve_file_path(client, settings)
+    approve_file_path.parent.mkdir(
+        parents=True, exist_ok=True
+    )  # Ensure the directory exists
+    if not approve_file_path.exists():
+        approve_file_path.write_text("[]")
+
+    # read the file and return it as a dictionary
+    try:
+        with open(approve_file_path, "r") as f:
+            return json.load(f)
+    except json.JSONDecodeError:
+        logger.error(
+            "Failed to decode JSON from auto-approve file, returning empty dict"
+        )
+        return []
+    except Exception as e:
+        logger.error(f"Error reading auto-approve file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to read auto-approve file")
+
+
+def save_auto_approve_list(
+    client: Client, settings: Settings, emails: list[str]
+) -> None:
+    """
+    Save the auto-approve data to the file.
+    """
+    approve_file_path = get_auto_approve_file_path(client, settings)
+    try:
+        with open(approve_file_path, "w") as f:
+            json.dump(emails, f, indent=4)
+        logger.debug(f"Auto-approve data saved to {approve_file_path}")
+    except Exception as e:
+        logger.error(f"Error saving auto-approve file: {e}")
+        raise HTTPException(status_code=500, detail="Failed to save auto-approve file")

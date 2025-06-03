@@ -1,18 +1,29 @@
 # Standard library imports
 from pathlib import Path
 import tempfile
+from fastapi.responses import JSONResponse
 import requests
 
 # Third-party imports
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Body
 from loguru import logger
 from syft_core import Client
 from syft_core.url import SyftBoxURL
 from syft_rds import init_session
+from syft_rds.models.models import DatasetUpdate
+from filelock import FileLock
+from typing import List
+
 
 # Local imports
 from .config import Settings, get_settings
 from .models import ListDatasetsResponse, ListJobsResponse, Dataset as DatasetModel
+from .models import ListAutoApproveResponse
+from .utils import (
+    get_auto_approve_list,
+    get_auto_approve_file_path,
+    save_auto_approve_list,
+)
 
 
 # Dependency for getting client
@@ -25,6 +36,8 @@ async def get_client(settings: Settings = Depends(get_settings)) -> Client:
 
 
 v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_client)])
+
+# --------------- Dataset Endpoints ---------------
 
 
 @v1_router.get(
@@ -138,7 +151,19 @@ async def create_dataset(
     except Exception as e:
         logger.error(f"Error creating dataset: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-    
+
+
+@v1_router.put(
+    "/datasets/{dataset_name}",
+    tags=["datasets"],
+    summary="Update a dataset",
+    description="Update an existing dataset by its name",
+)
+async def update_dataset(
+    dataset_name: str,
+):
+    pass
+
 
 @v1_router.delete(
     "/datasets/{dataset_name}",
@@ -149,15 +174,23 @@ async def create_dataset(
 async def delete_dataset(
     dataset_name: str,
     client: Client = Depends(get_client),
-) -> dict[str, str]:
+) -> JSONResponse:
     try:
         datasite_client = init_session(client.email)
         datasite_client.dataset.delete(dataset_name)
         logger.debug(f"Dataset {dataset_name} deleted successfully")
-        return {"message": f"Dataset {dataset_name} deleted successfully"}
+        return JSONResponse(
+            content={"message": f"Dataset {dataset_name} deleted successfully"},
+            status_code=200,
+        )
     except Exception as e:
         logger.error(f"Error deleting dataset {dataset_name}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+# -----------------------------------------------
+
+# --------------- Job Endpoints ---------------
 
 
 @v1_router.get(
@@ -177,6 +210,81 @@ async def list_jobs(
         logger.error(f"Error listing jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
+
+# ---------------------------------------------------------------
+
+# -------------------- Auto-approve Endpoints --------------------
+
+
+@v1_router.post(
+    "/auto-approved-datasites",
+    tags=["auto-approve"],
+    summary="Sets the auto-approve list",
+    description="Sets the list of emails that are auto-approved. This will replace the existing list.",
+)
+async def set_auto_approved_datasites(
+    client: Client = Depends(get_client),
+    settings: Settings = Depends(get_settings),
+    datasites: List[str] = Body(..., description="List of emails to auto-approve"),
+) -> JSONResponse:
+    # Create a lock file path based on the auto-approve file path
+    lock_file_path = get_auto_approve_file_path(client, settings).with_suffix(".lock")
+    file_lock = FileLock(str(lock_file_path))
+
+    try:
+        # Acquire the lock before modifying the file
+        with file_lock:
+            # Clean the email list (remove empty strings and whitespace)
+            datasites = [datasite.strip() for datasite in datasites if datasite.strip()]
+
+            # Update the auto-approve file with the new list
+            save_auto_approve_list(client, settings, datasites)
+
+            # Update datasets with the new auto-approve list
+            datasite_client = init_session(client.email)
+            datasets = datasite_client.dataset.get_all()
+            for dataset in datasets:
+                updated_dataset = datasite_client.dataset.update(
+                    DatasetUpdate(
+                        uid=dataset.uid,
+                        auto_approval=datasites,
+                    )
+                )
+                logger.debug(
+                    f"Updated dataset {updated_dataset.name} with auto-approval for {datasites}"
+                )
+
+            logger.debug(f"Updated auto-approve list with {len(datasites)} emails")
+            return JSONResponse(
+                content={
+                    "message": f"Auto-approve list updated with {len(datasites)} emails"
+                },
+                status_code=200,
+            )
+    except Exception as e:
+        logger.error(f"Error in auto-approve operation: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@v1_router.get(
+    "/auto-approved-datasites",
+    tags=["auto-approve"],
+    summary="Get the auto-approve list",
+    response_model=ListAutoApproveResponse,
+    description="Retrieve the list of datasites that are auto-approved",
+)
+async def get_auto_approved_datasites(
+    client: Client = Depends(get_client),
+    settings: Settings = Depends(get_settings),
+) -> ListAutoApproveResponse:
+    """
+    Get the list of datasites that are auto-approved.
+    """
+    auto_approved_datasites = get_auto_approve_list(client, settings)
+    return ListAutoApproveResponse(datasites=auto_approved_datasites)
+
+
+# ------------------------------------------------
 
 api_router = APIRouter(prefix="/api")
 api_router.include_router(v1_router)

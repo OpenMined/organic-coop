@@ -1,7 +1,11 @@
-from pydantic import BaseModel, ConfigDict, Field
-from pydantic.alias_generators import to_camel
+# Standard library imports
 from typing import List
 
+# Third-party imports
+from pydantic import BaseModel, ConfigDict, Field
+from pydantic.alias_generators import to_camel
+
+# Local imports
 from syft_rds.models.models import Dataset as SyftDataset, Job as SyftJob
 
 
@@ -28,3 +32,7 @@ class ListDatasetsResponse(BaseSchema):
 
 class ListJobsResponse(BaseSchema):
     jobs: List[Job]
+
+
+class ListAutoApproveResponse(BaseSchema):
+    datasites: List[str]
