@@ -6,6 +6,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
 import {
   Dialog,
   DialogContent,
@@ -30,12 +31,12 @@ export function CreateDatasetModal({
   onOpenChange,
   onSuccess,
 }: CreateDatasetModalProps) {
+  const { toast } = useToast();
   const [file, setFile] = useState<File | null>(null);
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
   const {
     isDragging,
     activeDropZone,
@@ -88,7 +89,6 @@ export function CreateDatasetModal({
 
     setLoading(true);
     setError("");
-    setSuccess("");
 
     try {
       const formData = new FormData();
@@ -101,11 +101,13 @@ export function CreateDatasetModal({
       const result = await apiService.createDataset(formData);
 
       if (result.success) {
-        setSuccess(result.message);
-        setTimeout(() => {
-          onSuccess();
-          resetForm();
-        }, 1500);
+        onSuccess();
+        resetForm();
+        onOpenChange(false);
+        toast({
+          title: "Success",
+          description: result.message,
+        });
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to create dataset");
@@ -119,7 +121,6 @@ export function CreateDatasetModal({
     setName("");
     setDescription("");
     setError("");
-    setSuccess("");
     setLoading(false);
   };
 
@@ -168,7 +169,6 @@ export function CreateDatasetModal({
                 type="file"
                 onChange={handleFileChange}
                 className="hidden"
-                required
               />
               <label htmlFor="dataset-file" className="block cursor-pointer">
                 <div className="space-y-2">
@@ -217,12 +217,6 @@ export function CreateDatasetModal({
           {error && (
             <Alert variant="destructive">
               <AlertDescription className="break-all">{error}</AlertDescription>
-            </Alert>
-          )}
-
-          {success && (
-            <Alert className="border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-              <AlertDescription>{success}</AlertDescription>
             </Alert>
           )}
 

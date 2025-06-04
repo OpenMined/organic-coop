@@ -45,6 +45,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { useDragDrop } from "@/components/drag-drop-context";
+import { useToast } from "@/hooks/use-toast";
 
 // Icons
 import {
@@ -77,13 +78,13 @@ export function DatasetActionsSheet({
   onOpenChange,
   onSuccess,
 }: DatasetActionsSheetProps) {
+  const { toast } = useToast();
   const [currentAction, setCurrentAction] = useState<Action>("view");
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [datasetName, setDatasetName] = useState("");
   const [datasetDescription, setDatasetDescription] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
-  const [successMessage, setSuccessMessage] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const {
     isDragging,
@@ -121,7 +122,6 @@ export function DatasetActionsSheet({
 
     setIsLoading(true);
     setErrorMessage("");
-    setSuccessMessage("");
 
     try {
       const formData = new FormData();
@@ -135,12 +135,12 @@ export function DatasetActionsSheet({
       const result = await apiService.updateDataset(dataset.id, formData);
 
       if (result.success) {
-        setSuccessMessage(result.message);
-        setTimeout(() => {
-          onSuccess();
-          resetFormState();
-          setCurrentAction("view");
-        }, 1500);
+        toast({
+          title: "Success",
+          description: result.message,
+        });
+        onSuccess();
+        onOpenChange(false);
       }
     } catch (err) {
       setErrorMessage(
@@ -156,10 +156,13 @@ export function DatasetActionsSheet({
 
     setIsLoading(true);
     setErrorMessage("");
-    setSuccessMessage("");
 
     try {
       const result = await apiService.deleteDataset(dataset.name);
+      toast({
+        title: "Success",
+        description: result.message,
+      });
       onSuccess();
       onOpenChange(false);
     } catch (err) {
@@ -177,7 +180,6 @@ export function DatasetActionsSheet({
 
     setIsLoading(true);
     setErrorMessage("");
-    setSuccessMessage("");
 
     try {
       const response = await apiService.downloadDatasetPrivate(dataset.id);
@@ -185,7 +187,6 @@ export function DatasetActionsSheet({
       const url = window.URL.createObjectURL(blob);
       const downloadLink = document.createElement("a");
       downloadLink.href = url;
-      // Get filename from Content-Disposition header or use dataset name
       const contentDisposition = response.headers.get("Content-Disposition");
       const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
       const filename = filenameMatch ? filenameMatch[1] : `${dataset.name}.csv`;
@@ -194,7 +195,11 @@ export function DatasetActionsSheet({
       downloadLink.click();
       window.URL.revokeObjectURL(url);
       document.body.removeChild(downloadLink);
-      setSuccessMessage("Dataset downloaded successfully");
+      toast({
+        title: "Success",
+        description: "Dataset downloaded successfully",
+      });
+      onOpenChange(false);
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : "Failed to download dataset"
@@ -209,7 +214,6 @@ export function DatasetActionsSheet({
     setDatasetName(dataset?.name || "");
     setDatasetDescription(dataset?.description || "");
     setErrorMessage("");
-    setSuccessMessage("");
     setIsLoading(false);
   };
 
@@ -459,12 +463,6 @@ export function DatasetActionsSheet({
                 <AlertDescription className="break-all">
                   {errorMessage}
                 </AlertDescription>
-              </Alert>
-            )}
-
-            {successMessage && (
-              <Alert className="mb-4 border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-                <AlertDescription>{successMessage}</AlertDescription>
               </Alert>
             )}
 
