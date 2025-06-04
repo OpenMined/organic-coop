@@ -17,6 +17,7 @@ import {
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Loader2, Upload, FolderOpen } from "lucide-react";
 import { apiService } from "@/lib/api";
+import { useDragDrop } from "@/components/drag-drop-context";
 
 interface CreateDatasetModalProps {
   open: boolean;
@@ -35,55 +36,22 @@ export function CreateDatasetModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [isDragging, setIsDragging] = useState(false);
+  const {
+    isDragging,
+    activeDropZone,
+    handleDragEnter,
+    handleDragLeave,
+    handleDragOver,
+    handleDrop: contextHandleDrop,
+  } = useDragDrop();
 
-  const handleDragEnter = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (
-      e.currentTarget === e.target ||
-      e.currentTarget.contains(e.target as Node)
-    ) {
-      setIsDragging(true);
-    }
-  };
-
-  const handleDragLeave = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (
-      e.currentTarget === e.target ||
-      !e.currentTarget.contains(e.relatedTarget as Node)
-    ) {
-      setIsDragging(false);
-    }
-  };
-
-  const handleDragOver = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (
-      e.currentTarget === e.target ||
-      e.currentTarget.contains(e.target as Node)
-    ) {
-      setIsDragging(true);
-    }
-  };
-
-  const handleDrop = (e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-
-    const droppedFiles = e.dataTransfer.files;
-    if (droppedFiles && droppedFiles.length > 0) {
-      const droppedFile = droppedFiles[0];
+  const handleFileDrop = (e: React.DragEvent) => {
+    contextHandleDrop(e, "create-dataset", (droppedFile) => {
       setFile(droppedFile);
-
       // Auto-fill name from file
       const fileName = droppedFile.name.replace(/\.[^/.]+$/, "");
       setName(fileName);
-    }
+    });
   };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -164,7 +132,13 @@ export function CreateDatasetModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent
+        className="sm:max-w-md"
+        onDragEnter={(e) => handleDragEnter(e, "create-dataset")}
+        onDragLeave={(e) => handleDragLeave(e, "create-dataset")}
+        onDragOver={(e) => handleDragOver(e, "create-dataset")}
+        onDrop={handleFileDrop}
+      >
         <DialogHeader>
           <DialogTitle>Create New Dataset</DialogTitle>
           <DialogDescription>
@@ -172,19 +146,22 @@ export function CreateDatasetModal({
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-4"
+          onDragEnter={(e) => handleDragEnter(e, "create-dataset")}
+          onDragLeave={(e) => handleDragLeave(e, "create-dataset")}
+          onDragOver={(e) => handleDragOver(e, "create-dataset")}
+          onDrop={handleFileDrop}
+        >
           <div className="space-y-2">
             <Label htmlFor="dataset-file">Dataset File *</Label>
             <div
               className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
-                isDragging
+                activeDropZone === "create-dataset" && isDragging
                   ? "border-primary bg-primary/5"
                   : "border-muted-foreground/25 hover:border-muted-foreground/50"
               }`}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDragOver={handleDragOver}
-              onDrop={handleDrop}
             >
               <input
                 id="dataset-file"
@@ -198,7 +175,7 @@ export function CreateDatasetModal({
                   <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
                   <div className="text-sm">
                     <span className="font-medium text-primary hover:underline">
-                      {isDragging
+                      {activeDropZone === "create-dataset" && isDragging
                         ? "Drop your file here"
                         : "Drop your file here or click to select"}
                     </span>

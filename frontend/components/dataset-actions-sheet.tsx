@@ -4,7 +4,7 @@
 import { useState, useEffect } from "react";
 
 // Components
-import { ActivityLineChart } from "@/components/activity-line-chart";
+import { ActivityGraph } from "@/components/activity-graph";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
   AlertDialog,
@@ -18,7 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { useDragDrop } from "@/components/drag-drop-context";
 
 // Icons
 import {
@@ -84,6 +85,14 @@ export function DatasetActionsSheet({
   const [errorMessage, setErrorMessage] = useState("");
   const [successMessage, setSuccessMessage] = useState("");
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const {
+    isDragging,
+    activeDropZone,
+    handleDragEnter,
+    handleDragLeave,
+    handleDragOver,
+    handleDrop: contextHandleDrop,
+  } = useDragDrop();
 
   // Update form values when dataset changes
   useEffect(() => {
@@ -208,18 +217,39 @@ export function DatasetActionsSheet({
     onOpenChange(newOpen);
   };
 
+  const handleFileDrop = (e: React.DragEvent) => {
+    if (currentAction !== "update") return;
+
+    contextHandleDrop(e, "update-dataset", (droppedFile) => {
+      setSelectedFile(droppedFile);
+    });
+  };
+
   if (!dataset) return null;
 
   const renderContent = () => {
     switch (currentAction) {
       case "update":
         return (
-          <form onSubmit={handleUpdateDataset} className="space-y-4">
+          <form
+            onSubmit={handleUpdateDataset}
+            className="space-y-4"
+            onDragEnter={(e) => handleDragEnter(e, "update-dataset")}
+            onDragLeave={(e) => handleDragLeave(e, "update-dataset")}
+            onDragOver={(e) => handleDragOver(e, "update-dataset")}
+            onDrop={handleFileDrop}
+          >
             <div className="space-y-2">
               <Label htmlFor="dataset-file">
                 Update Dataset File (optional)
               </Label>
-              <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors">
+              <div
+                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                  activeDropZone === "update-dataset" && isDragging
+                    ? "border-primary bg-primary/5"
+                    : "border-muted-foreground/25 hover:border-muted-foreground/50"
+                }`}
+              >
                 <input
                   id="dataset-file"
                   type="file"
@@ -231,7 +261,9 @@ export function DatasetActionsSheet({
                     <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
                     <div className="text-sm">
                       <span className="font-medium text-primary hover:underline">
-                        Click to select a new file
+                        {activeDropZone === "update-dataset" && isDragging
+                          ? "Drop your file here"
+                          : "Click to select a new file"}
                       </span>
                       <p className="text-muted-foreground mt-1">
                         Current file: {dataset.name}
@@ -296,7 +328,13 @@ export function DatasetActionsSheet({
       case "view":
       default:
         return (
-          <div className="flex flex-col h-full space-y-4">
+          <div
+            className="flex flex-col h-full space-y-4"
+            onDragEnter={(e) => handleDragEnter(e, "update-dataset")}
+            onDragLeave={(e) => handleDragLeave(e, "update-dataset")}
+            onDragOver={(e) => handleDragOver(e, "update-dataset")}
+            onDrop={handleFileDrop}
+          >
             {/* Dataset Statistics */}
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div className="space-y-1">
@@ -330,7 +368,25 @@ export function DatasetActionsSheet({
             </div>
 
             {/* Activity Graph */}
-            <ActivityLineChart data={dataset.activityData} />
+            <Card>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="text-sm font-medium">
+                    Activity Overview
+                  </CardTitle>
+                  <div className="text-xs text-muted-foreground">
+                    Last 12 weeks
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <ActivityGraph data={dataset.activityData} fullWidth />
+                <div className="flex items-center justify-between text-xs text-muted-foreground mt-4 pt-4 border-t">
+                  <div>Total Requests: 1</div>
+                  <div>Avg: 0/week</div>
+                </div>
+              </CardContent>
+            </Card>
 
             {/* Actions */}
             <div className="space-y-2">
@@ -373,7 +429,13 @@ export function DatasetActionsSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-        <SheetContent className="overflow-y-auto flex flex-col">
+        <SheetContent
+          className="overflow-y-auto flex flex-col"
+          onDragEnter={(e) => handleDragEnter(e, "update-dataset")}
+          onDragLeave={(e) => handleDragLeave(e, "update-dataset")}
+          onDragOver={(e) => handleDragOver(e, "update-dataset")}
+          onDrop={handleFileDrop}
+        >
           <SheetHeader>
             <SheetTitle>
               {currentAction === "update"
