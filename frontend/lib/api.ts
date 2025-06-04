@@ -237,4 +237,21 @@ export const apiService = {
     const data = await response.json();
     return data;
   },
+
+  async deleteDataset(datasetName: string): Promise<{ message: string }> {
+    const response = await fetch(
+      `${getBaseUrl()}/api/v1/datasets/${encodeURIComponent(datasetName)}`,
+      {
+        method: "DELETE",
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to delete dataset");
+    }
+
+    const data = await response.json();
+    return data;
+  },
 };

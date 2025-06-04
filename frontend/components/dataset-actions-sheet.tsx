@@ -140,16 +140,9 @@ export function DatasetActionsSheet({
     setSuccess("");
 
     try {
-      const result = await apiService.deleteDataset(dataset.id);
-
-      if (result.success) {
-        setSuccess(result.message);
-        setTimeout(() => {
-          onSuccess();
-          resetForm();
-          onOpenChange(false);
-        }, 1500);
-      }
+      const result = await apiService.deleteDataset(dataset.name);
+      onSuccess();
+      onOpenChange(false);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to delete dataset");
     } finally {

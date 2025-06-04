@@ -16,7 +16,6 @@ from typing import List
 
 
 # Local imports
-from .config import Settings, get_settings
 from .models import ListDatasetsResponse, ListJobsResponse, Dataset as DatasetModel
 from .models import ListAutoApproveResponse
 from .utils import (
@@ -27,7 +26,7 @@ from .utils import (
 
 
 # Dependency for getting client
-async def get_client(settings: Settings = Depends(get_settings)) -> Client:
+async def get_client() -> Client:
     try:
         return Client.load()
     except Exception as e:
@@ -124,7 +123,7 @@ async def create_dataset(
                 response.raise_for_status()
                 mock_dataset_path.write_bytes(response.content)
                 logger.debug(
-                    f"Mock dataset downloaded  and saved to: {mock_dataset_path}"
+                    f"Mock dataset downloaded and saved to: {mock_dataset_path}"
                 )
             except Exception as e:
                 logger.error(f"Failed to download mock dataset: {e}")
@@ -143,6 +142,7 @@ async def create_dataset(
                 path=real_path,
                 mock_path=mock_path,
                 description_path=dummy_description_path,
+                auto_approval=get_auto_approve_list(client),
             )
             logger.debug(f"Dataset created: {dataset}")
             return dataset
@@ -224,11 +224,10 @@ async def list_jobs(
 )
 async def set_auto_approved_datasites(
     client: Client = Depends(get_client),
-    settings: Settings = Depends(get_settings),
     datasites: List[str] = Body(..., description="List of emails to auto-approve"),
 ) -> JSONResponse:
     # Create a lock file path based on the auto-approve file path
-    lock_file_path = get_auto_approve_file_path(client, settings).with_suffix(".lock")
+    lock_file_path = get_auto_approve_file_path(client).with_suffix(".lock")
     file_lock = FileLock(str(lock_file_path))
 
     try:
@@ -238,7 +237,7 @@ async def set_auto_approved_datasites(
             datasites = [datasite.strip() for datasite in datasites if datasite.strip()]
 
             # Update the auto-approve file with the new list
-            save_auto_approve_list(client, settings, datasites)
+            save_auto_approve_list(client, datasites)
 
             # Update datasets with the new auto-approve list
             datasite_client = init_session(client.email)
@@ -275,12 +274,11 @@ async def set_auto_approved_datasites(
 )
 async def get_auto_approved_datasites(
     client: Client = Depends(get_client),
-    settings: Settings = Depends(get_settings),
 ) -> ListAutoApproveResponse:
     """
     Get the list of datasites that are auto-approved.
     """
-    auto_approved_datasites = get_auto_approve_list(client, settings)
+    auto_approved_datasites = get_auto_approve_list(client)
     return ListAutoApproveResponse(datasites=auto_approved_datasites)
 
 
