@@ -15,8 +15,8 @@ interface LayoutProps {
 
 export function Layout({ children, showHeader = false }: LayoutProps) {
   const pathname = usePathname();
-  const isDatasets = pathname === "/datasets";
-  const isJobs = pathname === "/jobs";
+  const isDatasets = pathname === "/datasets/";
+  const isJobs = pathname === "/jobs/";
 
   return (
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
