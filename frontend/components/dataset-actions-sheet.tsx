@@ -1,7 +1,7 @@
 "use client";
 
 // React
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 // Components
 import { ActivityLineChart } from "@/components/activity-line-chart";
@@ -76,122 +76,134 @@ export function DatasetActionsSheet({
   onOpenChange,
   onSuccess,
 }: DatasetActionsSheetProps) {
-  const [action, setAction] = useState<Action>("view");
-  const [file, setFile] = useState<File | null>(null);
-  const [name, setName] = useState(dataset?.name || "");
-  const [description, setDescription] = useState(dataset?.description || "");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
-  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [currentAction, setCurrentAction] = useState<Action>("view");
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [datasetName, setDatasetName] = useState("");
+  const [datasetDescription, setDatasetDescription] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [successMessage, setSuccessMessage] = useState("");
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  // Update form values when dataset changes
+  useEffect(() => {
+    if (dataset) {
+      setDatasetName(dataset.name || "");
+      setDatasetDescription(dataset.description || "");
+    }
+  }, [dataset]);
+
+  const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
     if (selectedFiles && selectedFiles.length > 0) {
-      setFile(selectedFiles[0]);
+      setSelectedFile(selectedFiles[0]);
     }
   };
 
-  const handleUpdate = async (e: React.FormEvent) => {
+  const handleUpdateDataset = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!dataset) return;
 
-    if (!name.trim()) {
-      setError("Please enter a dataset name");
+    if (!datasetName.trim()) {
+      setErrorMessage("Please enter a dataset name");
       return;
     }
 
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    setIsLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       const formData = new FormData();
-      formData.append("name", name.trim());
-      formData.append("description", description.trim() || "");
+      formData.append("name", datasetName.trim());
+      formData.append("description", datasetDescription.trim() || "");
 
-      if (file) {
-        formData.append("dataset", file);
+      if (selectedFile) {
+        formData.append("dataset", selectedFile);
       }
 
       const result = await apiService.updateDataset(dataset.id, formData);
 
       if (result.success) {
-        setSuccess(result.message);
+        setSuccessMessage(result.message);
         setTimeout(() => {
           onSuccess();
-          resetForm();
-          setAction("view");
+          resetFormState();
+          setCurrentAction("view");
         }, 1500);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to update dataset");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Failed to update dataset"
+      );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const handleDelete = async () => {
+  const handleDeleteDataset = async () => {
     if (!dataset) return;
 
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    setIsLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       const result = await apiService.deleteDataset(dataset.name);
       onSuccess();
       onOpenChange(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to delete dataset");
+      setErrorMessage(
+        err instanceof Error ? err.message : "Failed to delete dataset"
+      );
     } finally {
-      setLoading(false);
-      setShowDeleteDialog(false);
+      setIsLoading(false);
+      setIsDeleteDialogOpen(false);
     }
   };
 
-  const handleDownload = async () => {
+  const handleDownloadDataset = async () => {
     if (!dataset) return;
 
-    setLoading(true);
-    setError("");
-    setSuccess("");
+    setIsLoading(true);
+    setErrorMessage("");
+    setSuccessMessage("");
 
     try {
       const response = await apiService.downloadDataset(dataset.id);
       const blob = new Blob([response.data], { type: response.type });
       const url = window.URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = dataset.name;
-      document.body.appendChild(a);
-      a.click();
+      const downloadLink = document.createElement("a");
+      downloadLink.href = url;
+      downloadLink.download = dataset.name;
+      document.body.appendChild(downloadLink);
+      downloadLink.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
-      setSuccess("Dataset downloaded successfully");
+      document.body.removeChild(downloadLink);
+      setSuccessMessage("Dataset downloaded successfully");
     } catch (err) {
-      setError(
+      setErrorMessage(
         err instanceof Error ? err.message : "Failed to download dataset"
       );
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
-  const resetForm = () => {
-    setFile(null);
-    setName(dataset?.name || "");
-    setDescription(dataset?.description || "");
-    setError("");
-    setSuccess("");
-    setLoading(false);
+  const resetFormState = () => {
+    setSelectedFile(null);
+    setDatasetName(dataset?.name || "");
+    setDatasetDescription(dataset?.description || "");
+    setErrorMessage("");
+    setSuccessMessage("");
+    setIsLoading(false);
   };
 
-  const handleOpenChange = (newOpen: boolean) => {
-    if (!newOpen && !loading) {
-      resetForm();
-      setAction("view");
+  const handleSheetOpenChange = (newOpen: boolean) => {
+    if (!newOpen && !isLoading) {
+      resetFormState();
+      setCurrentAction("view");
     }
     onOpenChange(newOpen);
   };
@@ -199,10 +211,10 @@ export function DatasetActionsSheet({
   if (!dataset) return null;
 
   const renderContent = () => {
-    switch (action) {
+    switch (currentAction) {
       case "update":
         return (
-          <form onSubmit={handleUpdate} className="space-y-4">
+          <form onSubmit={handleUpdateDataset} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="dataset-file">
                 Update Dataset File (optional)
@@ -211,7 +223,7 @@ export function DatasetActionsSheet({
                 <input
                   id="dataset-file"
                   type="file"
-                  onChange={handleFileChange}
+                  onChange={handleFileSelection}
                   className="hidden"
                 />
                 <label htmlFor="dataset-file" className="cursor-pointer">
@@ -228,9 +240,9 @@ export function DatasetActionsSheet({
                   </div>
                 </label>
               </div>
-              {file && (
+              {selectedFile && (
                 <p className="text-sm text-muted-foreground">
-                  Selected: {file.name}
+                  Selected: {selectedFile.name}
                 </p>
               )}
             </div>
@@ -238,8 +250,8 @@ export function DatasetActionsSheet({
               <Label htmlFor="name">Dataset Name *</Label>
               <Input
                 id="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={datasetName}
+                onChange={(e) => setDatasetName(e.target.value)}
                 placeholder="Enter dataset name"
                 required
               />
@@ -248,8 +260,8 @@ export function DatasetActionsSheet({
               <Label htmlFor="description">Description (optional)</Label>
               <Input
                 id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
+                value={datasetDescription}
+                onChange={(e) => setDatasetDescription(e.target.value)}
                 placeholder="Brief description of the dataset"
               />
             </div>
@@ -257,15 +269,15 @@ export function DatasetActionsSheet({
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => setAction("view")}
+                onClick={() => setCurrentAction("view")}
                 className="mb-2"
               >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 Back
               </Button>
 
-              <Button type="submit" disabled={loading} className="w-full">
-                {loading ? (
+              <Button type="submit" disabled={isLoading} className="w-full">
+                {isLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Updating...
@@ -327,10 +339,8 @@ export function DatasetActionsSheet({
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => {
-                    handleDownload();
-                  }}
-                  disabled={loading}
+                  onClick={handleDownloadDataset}
+                  disabled={isLoading}
                 >
                   <Download className="mr-2 h-4 w-4" />
                   Download Dataset
@@ -338,8 +348,8 @@ export function DatasetActionsSheet({
                 <Button
                   variant="outline"
                   className="w-full justify-start"
-                  onClick={() => setAction("update")}
-                  disabled={loading}
+                  onClick={() => setCurrentAction("update")}
+                  disabled={isLoading}
                 >
                   <Edit className="mr-2 h-4 w-4" />
                   Update Dataset
@@ -347,8 +357,8 @@ export function DatasetActionsSheet({
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                  onClick={() => setShowDeleteDialog(true)}
-                  disabled={loading}
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isLoading}
                 >
                   <Trash2 className="mr-2 h-4 w-4" />
                   Delete Dataset
@@ -362,38 +372,40 @@ export function DatasetActionsSheet({
 
   return (
     <>
-      <Sheet open={open} onOpenChange={handleOpenChange}>
+      <Sheet open={open} onOpenChange={handleSheetOpenChange}>
         <SheetContent className="overflow-y-auto flex flex-col">
           <SheetHeader>
             <SheetTitle>
-              {action === "update" ? `Update ${dataset.name}` : dataset.name}
+              {currentAction === "update"
+                ? `Update ${dataset.name}`
+                : dataset.name}
             </SheetTitle>
             <SheetDescription>
-              {action === "update"
+              {currentAction === "update"
                 ? "Update your dataset information"
                 : dataset.description}
             </SheetDescription>
           </SheetHeader>
 
           <div className="flex-1">
-            {error && (
+            {errorMessage && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription className="break-all">
-                  {error}
+                  {errorMessage}
                 </AlertDescription>
               </Alert>
             )}
 
-            {success && (
+            {successMessage && (
               <Alert className="mb-4 border-green-200 bg-green-50 text-green-800 dark:border-green-800 dark:bg-green-950 dark:text-green-200">
-                <AlertDescription>{success}</AlertDescription>
+                <AlertDescription>{successMessage}</AlertDescription>
               </Alert>
             )}
 
             {renderContent()}
           </div>
 
-          {action === "view" && (
+          {currentAction === "view" && (
             <SheetFooter>
               <Button
                 variant="outline"
@@ -408,7 +420,10 @@ export function DatasetActionsSheet({
         </SheetContent>
       </Sheet>
 
-      <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+      <AlertDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+      >
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2">
@@ -424,7 +439,7 @@ export function DatasetActionsSheet({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
+              onClick={handleDeleteDataset}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete
