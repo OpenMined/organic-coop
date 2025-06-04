@@ -180,12 +180,16 @@ export function DatasetActionsSheet({
     setSuccessMessage("");
 
     try {
-      const response = await apiService.downloadDataset(dataset.id);
-      const blob = new Blob([response.data], { type: response.type });
+      const response = await apiService.downloadDatasetPrivate(dataset.id);
+      const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);
       const downloadLink = document.createElement("a");
       downloadLink.href = url;
-      downloadLink.download = dataset.name;
+      // Get filename from Content-Disposition header or use dataset name
+      const contentDisposition = response.headers.get("Content-Disposition");
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
+      const filename = filenameMatch ? filenameMatch[1] : `${dataset.name}.csv`;
+      downloadLink.download = filename;
       document.body.appendChild(downloadLink);
       downloadLink.click();
       window.URL.revokeObjectURL(url);

@@ -1,7 +1,7 @@
 # Standard library imports
 from pathlib import Path
 import tempfile
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 import requests
 
 # Third-party imports
@@ -185,6 +185,52 @@ async def delete_dataset(
         )
     except Exception as e:
         logger.error(f"Error deleting dataset {dataset_name}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@v1_router.get(
+    "/datasets/{dataset_uuid}/private",
+    tags=["datasets"],
+    summary="Download dataset private file",
+    description="Download the private file for a specific dataset using its UUID",
+)
+async def download_dataset_private(
+    dataset_uuid: str,
+    client: Client = Depends(get_client),
+) -> StreamingResponse:
+    try:
+        datasite_client = init_session(client.email)
+        dataset = datasite_client.dataset.get(uid=dataset_uuid)
+        if not dataset:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Dataset with UUID '{dataset_uuid}' not found",
+            )
+
+        dataset = DatasetModel.model_validate(dataset)
+        private_file_path = next(dataset.private_path.iterdir(), None)
+        if not private_file_path or not private_file_path.exists():
+            raise HTTPException(
+                status_code=404,
+                detail=f"Private file not found for dataset '{dataset_uuid}'",
+            )
+
+        def iterfile():
+            with open(private_file_path, "rb") as file:
+                yield from file
+
+        extension = private_file_path.suffix
+        filename = f"{dataset.name}{extension}"
+
+        return StreamingResponse(
+            iterfile(),
+            media_type="application/octet-stream",
+            headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error downloading private file for dataset {dataset_uuid}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 

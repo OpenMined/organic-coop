@@ -254,4 +254,20 @@ export const apiService = {
     const data = await response.json();
     return data;
   },
+
+  async downloadDatasetPrivate(datasetUid: string): Promise<Response> {
+    const response = await fetch(
+      `${getBaseUrl()}/api/v1/datasets/${datasetUid}/private`,
+      {
+        method: "GET",
+      }
+    );
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.detail || "Failed to download dataset");
+    }
+
+    return response;
+  },
 };
