@@ -35,6 +35,56 @@ export function CreateDatasetModal({
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isDragging, setIsDragging] = useState(false);
+
+  const handleDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (
+      e.currentTarget === e.target ||
+      e.currentTarget.contains(e.target as Node)
+    ) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (
+      e.currentTarget === e.target ||
+      !e.currentTarget.contains(e.relatedTarget as Node)
+    ) {
+      setIsDragging(false);
+    }
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (
+      e.currentTarget === e.target ||
+      e.currentTarget.contains(e.target as Node)
+    ) {
+      setIsDragging(true);
+    }
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragging(false);
+
+    const droppedFiles = e.dataTransfer.files;
+    if (droppedFiles && droppedFiles.length > 0) {
+      const droppedFile = droppedFiles[0];
+      setFile(droppedFile);
+
+      // Auto-fill name from file
+      const fileName = droppedFile.name.replace(/\.[^/.]+$/, "");
+      setName(fileName);
+    }
+  };
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFiles = e.target.files;
@@ -125,7 +175,17 @@ export function CreateDatasetModal({
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
             <Label htmlFor="dataset-file">Dataset File *</Label>
-            <div className="border-2 border-dashed border-muted-foreground/25 rounded-lg p-6 text-center hover:border-muted-foreground/50 transition-colors">
+            <div
+              className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                isDragging
+                  ? "border-primary bg-primary/5"
+                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+              }`}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDragOver={handleDragOver}
+              onDrop={handleDrop}
+            >
               <input
                 id="dataset-file"
                 type="file"
@@ -133,12 +193,14 @@ export function CreateDatasetModal({
                 className="hidden"
                 required
               />
-              <label htmlFor="dataset-file" className="cursor-pointer">
+              <label htmlFor="dataset-file" className="block cursor-pointer">
                 <div className="space-y-2">
                   <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
                   <div className="text-sm">
                     <span className="font-medium text-primary hover:underline">
-                      Click to select your dataset file
+                      {isDragging
+                        ? "Drop your file here"
+                        : "Drop your file here or click to select"}
                     </span>
                     <p className="text-muted-foreground mt-1">
                       Choose your dataset file
