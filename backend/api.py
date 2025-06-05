@@ -177,7 +177,12 @@ async def delete_dataset(
 ) -> JSONResponse:
     try:
         datasite_client = init_session(client.email)
-        datasite_client.dataset.delete(dataset_name)
+        delete_res = datasite_client.dataset.delete(dataset_name)
+        if not delete_res:
+            raise HTTPException(
+                status_code=404,
+                detail=f"Unable to delete dataset '{dataset_name}'"
+            )
         logger.debug(f"Dataset {dataset_name} deleted successfully")
         return JSONResponse(
             content={"message": f"Dataset {dataset_name} deleted successfully"},
