@@ -1,92 +1,84 @@
-"use client";
+"use client"
 
-import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Check,
-  X,
-  Eye,
-  Plus,
-  Settings,
-  Briefcase,
-  Loader2,
-} from "lucide-react";
-import { apiService, type Job } from "@/lib/api";
-import { timeAgo } from "@/lib/utils";
+} from "@/components/ui/card"
+import { Badge } from "@/components/ui/badge"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Check, X, Eye, Plus, Settings, Briefcase, Loader2 } from "lucide-react"
+import { apiService, type Job } from "@/lib/api/api"
+import { timeAgo } from "@/lib/utils"
 
 export function JobsView() {
-  const [jobs, setJobs] = useState<Job[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [autoApprovalEmails, setAutoApprovalEmails] = useState<string[]>([]);
-  const [newEmail, setNewEmail] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
+  const [jobs, setJobs] = useState<Job[]>([])
+  const [loading, setLoading] = useState(true)
+  const [autoApprovalEmails, setAutoApprovalEmails] = useState<string[]>([])
+  const [newEmail, setNewEmail] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    loadJobs();
-    loadAutoApprovalList();
-  }, []);
+    loadJobs()
+    loadAutoApprovalList()
+  }, [])
 
   const loadJobs = async () => {
     try {
-      setLoading(true);
-      const response = await apiService.getJobs();
-      setJobs(response.jobs);
+      setLoading(true)
+      const response = await apiService.getJobs()
+      setJobs(response.jobs)
     } catch (error) {
-      console.error("Failed to load jobs:", error);
+      console.error("Failed to load jobs:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const loadAutoApprovalList = async () => {
     try {
-      const { datasites } = await apiService.getAutoApprovedDatasites();
-      setAutoApprovalEmails(datasites);
+      const { datasites } = await apiService.getAutoApprovedDatasites()
+      setAutoApprovalEmails(datasites)
     } catch (error) {
-      console.error("Failed to load auto-approval list:", error);
+      console.error("Failed to load auto-approval list:", error)
     }
-  };
+  }
 
   const addAutoApprovalEmail = async () => {
-    if (!newEmail || autoApprovalEmails.includes(newEmail)) return;
+    if (!newEmail || autoApprovalEmails.includes(newEmail)) return
 
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       // Add the new email to the list and send the entire list
-      const updatedList = [...autoApprovalEmails, newEmail];
-      await apiService.setAutoApprovedDatasites(updatedList);
-      setAutoApprovalEmails(updatedList);
-      setNewEmail("");
+      const updatedList = [...autoApprovalEmails, newEmail]
+      await apiService.setAutoApprovedDatasites(updatedList)
+      setAutoApprovalEmails(updatedList)
+      setNewEmail("")
     } catch (error) {
-      console.error("Failed to update auto-approve list:", error);
+      console.error("Failed to update auto-approve list:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const removeAutoApprovalEmail = async (email: string) => {
-    setIsLoading(true);
+    setIsLoading(true)
     try {
       // Remove the email from the list and send the updated list
-      const updatedList = autoApprovalEmails.filter((e) => e !== email);
-      await apiService.setAutoApprovedDatasites(updatedList);
-      setAutoApprovalEmails(updatedList);
+      const updatedList = autoApprovalEmails.filter((e) => e !== email)
+      await apiService.setAutoApprovedDatasites(updatedList)
+      setAutoApprovalEmails(updatedList)
     } catch (error) {
-      console.error("Failed to update auto-approve list:", error);
+      console.error("Failed to update auto-approve list:", error)
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleJobAction = (jobId: number, action: "approve" | "deny") => {
     setJobs(
@@ -95,23 +87,23 @@ export function JobsView() {
           ? { ...job, status: action === "approve" ? "approved" : "denied" }
           : job
       )
-    );
-  };
+    )
+  }
 
   const getJobsByStatus = (status: Job["status"]) => {
-    return jobs.filter((job) => job.status === status);
-  };
+    return jobs.filter((job) => job.status === status)
+  }
 
   const getStatusColor = (status: Job["status"]) => {
     switch (status) {
       case "pending":
-        return "border-yellow-200 bg-yellow-50 text-yellow-600 dark:border-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30";
+        return "border-yellow-200 bg-yellow-50 text-yellow-600 dark:border-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30"
       case "approved":
-        return "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30";
+        return "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
       case "denied":
-        return "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30";
+        return "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -128,7 +120,7 @@ export function JobsView() {
           </Card>
         ))}
       </div>
-    );
+    )
   }
 
   return (
@@ -217,8 +209,8 @@ export function JobsView() {
         </div>
       ) : (
         (["pending", "approved", "denied"] as const).map((status) => {
-          const statusJobs = getJobsByStatus(status);
-          if (statusJobs.length === 0) return null;
+          const statusJobs = getJobsByStatus(status)
+          if (statusJobs.length === 0) return null
 
           return (
             <div key={status} className="space-y-4">
@@ -289,9 +281,9 @@ export function JobsView() {
                 ))}
               </div>
             </div>
-          );
+          )
         })
       )}
     </div>
-  );
+  )
 }

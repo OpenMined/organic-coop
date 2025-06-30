@@ -92,3 +92,9 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+@layer utilities {
+  .debug {
+    @apply outline outline-2 -outline-offset-1 outline-red-500/70;
+  }
+}

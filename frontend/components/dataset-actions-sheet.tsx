@@ -1,11 +1,11 @@
-"use client";
+"use client"
 
 // React
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"
 
 // Components
-import { ActivityGraph } from "@/components/activity-graph";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { ActivityGraph } from "@/components/activity-graph"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -15,10 +15,10 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+} from "@/components/ui/alert-dialog"
+import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -26,9 +26,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@/components/ui/dialog"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Sheet,
   SheetContent,
@@ -37,15 +37,15 @@ import {
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
+} from "@/components/ui/sheet"
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { useDragDrop } from "@/components/drag-drop-context";
-import { useToast } from "@/hooks/use-toast";
+} from "@/components/ui/tooltip"
+import { useDragDrop } from "@/components/drag-drop-context"
+import { useToast } from "@/hooks/use-toast"
 
 // Icons
 import {
@@ -58,19 +58,19 @@ import {
   Settings,
   Trash2,
   Upload,
-} from "lucide-react";
+} from "lucide-react"
 
 // Utils
-import { apiService, type Dataset } from "@/lib/api";
+import { apiService, type Dataset } from "@/lib/api/api"
 
 interface DatasetActionsSheetProps {
-  dataset: Dataset | null;
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  dataset: Dataset | null
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess: () => void
 }
 
-type Action = "view" | "update";
+type Action = "view" | "update"
 
 export function DatasetActionsSheet({
   dataset,
@@ -78,14 +78,14 @@ export function DatasetActionsSheet({
   onOpenChange,
   onSuccess,
 }: DatasetActionsSheetProps) {
-  const { toast } = useToast();
-  const [currentAction, setCurrentAction] = useState<Action>("view");
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [datasetName, setDatasetName] = useState("");
-  const [datasetDescription, setDatasetDescription] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const { toast } = useToast()
+  const [currentAction, setCurrentAction] = useState<Action>("view")
+  const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [datasetName, setDatasetName] = useState("")
+  const [datasetDescription, setDatasetDescription] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const {
     isDragging,
     activeDropZone,
@@ -93,147 +93,147 @@ export function DatasetActionsSheet({
     handleDragLeave,
     handleDragOver,
     handleDrop: contextHandleDrop,
-  } = useDragDrop();
+  } = useDragDrop()
 
   // Update form values when dataset changes
   useEffect(() => {
     if (dataset) {
-      setDatasetName(dataset.name || "");
-      setDatasetDescription(dataset.description || "");
+      setDatasetName(dataset.name || "")
+      setDatasetDescription(dataset.description || "")
     }
-  }, [dataset]);
+  }, [dataset])
 
   const handleFileSelection = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
+    const selectedFiles = e.target.files
     if (selectedFiles && selectedFiles.length > 0) {
-      setSelectedFile(selectedFiles[0]);
+      setSelectedFile(selectedFiles[0])
     }
-  };
+  }
 
   const handleUpdateDataset = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
-    if (!dataset) return;
+    if (!dataset) return
 
     if (!datasetName.trim()) {
-      setErrorMessage("Please enter a dataset name");
-      return;
+      setErrorMessage("Please enter a dataset name")
+      return
     }
 
-    setIsLoading(true);
-    setErrorMessage("");
+    setIsLoading(true)
+    setErrorMessage("")
 
     try {
-      const formData = new FormData();
-      formData.append("name", datasetName.trim());
-      formData.append("description", datasetDescription.trim() || "");
+      const formData = new FormData()
+      formData.append("name", datasetName.trim())
+      formData.append("description", datasetDescription.trim() || "")
 
       if (selectedFile) {
-        formData.append("dataset", selectedFile);
+        formData.append("dataset", selectedFile)
       }
 
-      const result = await apiService.updateDataset(dataset.id, formData);
+      const result = await apiService.updateDataset(dataset.id, formData)
 
       if (result.success) {
         toast({
           title: "Success",
           description: result.message,
-        });
-        onSuccess();
-        onOpenChange(false);
+        })
+        onSuccess()
+        onOpenChange(false)
       }
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : "Failed to update dataset"
-      );
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const handleDeleteDataset = async () => {
-    if (!dataset) return;
+    if (!dataset) return
 
-    setIsLoading(true);
-    setErrorMessage("");
+    setIsLoading(true)
+    setErrorMessage("")
 
     try {
-      const result = await apiService.deleteDataset(dataset.name);
+      const result = await apiService.deleteDataset(dataset.name)
       toast({
         title: "Success",
         description: result.message,
-      });
-      onSuccess();
-      onOpenChange(false);
+      })
+      onSuccess()
+      onOpenChange(false)
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : "Failed to delete dataset"
-      );
+      )
     } finally {
-      setIsLoading(false);
-      setIsDeleteDialogOpen(false);
+      setIsLoading(false)
+      setIsDeleteDialogOpen(false)
     }
-  };
+  }
 
   const handleDownloadDataset = async () => {
-    if (!dataset) return;
+    if (!dataset) return
 
-    setIsLoading(true);
-    setErrorMessage("");
+    setIsLoading(true)
+    setErrorMessage("")
 
     try {
-      const response = await apiService.downloadDatasetPrivate(dataset.id);
-      const blob = await response.blob();
-      const url = window.URL.createObjectURL(blob);
-      const downloadLink = document.createElement("a");
-      downloadLink.href = url;
-      const contentDisposition = response.headers.get("Content-Disposition");
-      const filenameMatch = contentDisposition?.match(/filename="(.+)"/);
-      const filename = filenameMatch ? filenameMatch[1] : `${dataset.name}.csv`;
-      downloadLink.download = filename;
-      document.body.appendChild(downloadLink);
-      downloadLink.click();
-      window.URL.revokeObjectURL(url);
-      document.body.removeChild(downloadLink);
+      const response = await apiService.downloadDatasetPrivate(dataset.id)
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
+      const downloadLink = document.createElement("a")
+      downloadLink.href = url
+      const contentDisposition = response.headers.get("Content-Disposition")
+      const filenameMatch = contentDisposition?.match(/filename="(.+)"/)
+      const filename = filenameMatch ? filenameMatch[1] : `${dataset.name}.csv`
+      downloadLink.download = filename
+      document.body.appendChild(downloadLink)
+      downloadLink.click()
+      window.URL.revokeObjectURL(url)
+      document.body.removeChild(downloadLink)
       toast({
         title: "Success",
         description: "Dataset downloaded successfully",
-      });
-      onOpenChange(false);
+      })
+      onOpenChange(false)
     } catch (err) {
       setErrorMessage(
         err instanceof Error ? err.message : "Failed to download dataset"
-      );
+      )
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   const resetFormState = () => {
-    setSelectedFile(null);
-    setDatasetName(dataset?.name || "");
-    setDatasetDescription(dataset?.description || "");
-    setErrorMessage("");
-    setIsLoading(false);
-  };
+    setSelectedFile(null)
+    setDatasetName(dataset?.name || "")
+    setDatasetDescription(dataset?.description || "")
+    setErrorMessage("")
+    setIsLoading(false)
+  }
 
   const handleSheetOpenChange = (newOpen: boolean) => {
     if (!newOpen && !isLoading) {
-      resetFormState();
-      setCurrentAction("view");
+      resetFormState()
+      setCurrentAction("view")
     }
-    onOpenChange(newOpen);
-  };
+    onOpenChange(newOpen)
+  }
 
   const handleFileDrop = (e: React.DragEvent) => {
-    if (currentAction !== "update") return;
+    if (currentAction !== "update") return
 
     contextHandleDrop(e, "update-dataset", (droppedFile) => {
-      setSelectedFile(droppedFile);
-    });
-  };
+      setSelectedFile(droppedFile)
+    })
+  }
 
-  if (!dataset) return null;
+  if (!dataset) return null
 
   const renderContent = () => {
     switch (currentAction) {
@@ -331,7 +331,7 @@ export function DatasetActionsSheet({
               </Button>
             </div>
           </form>
-        );
+        )
 
       case "view":
       default:
@@ -430,9 +430,9 @@ export function DatasetActionsSheet({
               </div>
             </div>
           </div>
-        );
+        )
     }
-  };
+  }
 
   return (
     <>
@@ -512,5 +512,5 @@ export function DatasetActionsSheet({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  );
+  )
 }

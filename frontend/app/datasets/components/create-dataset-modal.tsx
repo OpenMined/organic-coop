@@ -1,12 +1,12 @@
-"use client";
+"use client"
 
-import type React from "react";
+import type React from "react"
 
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useToast } from "@/hooks/use-toast";
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
   DialogContent,
@@ -14,16 +14,17 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Loader2, Upload, FolderOpen } from "lucide-react";
-import { apiService } from "@/lib/api";
-import { useDragDrop } from "@/components/drag-drop-context";
+} from "@/components/ui/dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { Loader2, Upload, FolderOpen } from "lucide-react"
+import { apiService } from "@/lib/api/api"
+import { useDragDrop } from "@/components/drag-drop-context"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface CreateDatasetModalProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSuccess: () => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onSuccess?: () => void
 }
 
 export function CreateDatasetModal({
@@ -31,12 +32,12 @@ export function CreateDatasetModal({
   onOpenChange,
   onSuccess,
 }: CreateDatasetModalProps) {
-  const { toast } = useToast();
-  const [file, setFile] = useState<File | null>(null);
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const { toast } = useToast()
+  const [file, setFile] = useState<File | null>(null)
+  const [name, setName] = useState("")
+  const [description, setDescription] = useState("")
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState("")
   const {
     isDragging,
     activeDropZone,
@@ -44,92 +45,107 @@ export function CreateDatasetModal({
     handleDragLeave,
     handleDragOver,
     handleDrop: contextHandleDrop,
-  } = useDragDrop();
+  } = useDragDrop()
+
+  const queryClient = useQueryClient()
+
+  const createDatasetMutation = useMutation({
+    mutationFn: apiService.createDataset,
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["datasets"] })
+      toast({
+        title: "Success",
+        description: data.message,
+      })
+      onSuccess?.()
+    },
+  })
 
   const handleFileDrop = (e: React.DragEvent) => {
     contextHandleDrop(e, "create-dataset", (droppedFile) => {
-      setFile(droppedFile);
+      setFile(droppedFile)
       // Auto-fill name from file
-      const fileName = droppedFile.name.replace(/\.[^/.]+$/, "");
-      setName(fileName);
-    });
-  };
+      const fileName = droppedFile.name.replace(/\.[^/.]+$/, "")
+      setName(fileName)
+    })
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const selectedFiles = e.target.files;
+    const selectedFiles = e.target.files
     if (selectedFiles && selectedFiles.length > 0) {
-      setFile(selectedFiles[0]);
+      setFile(selectedFiles[0])
 
       // Auto-fill name from first file or folder
-      const firstFile = selectedFiles[0];
+      const firstFile = selectedFiles[0]
       if (firstFile.webkitRelativePath) {
         // Extract folder name from path
-        const folderName = firstFile.webkitRelativePath.split("/")[0];
-        setName(folderName);
+        const folderName = firstFile.webkitRelativePath.split("/")[0]
+        setName(folderName)
       } else {
         // Use file name without extension
-        const fileName = firstFile.name.replace(/\.[^/.]+$/, "");
-        setName(fileName);
+        const fileName = firstFile.name.replace(/\.[^/.]+$/, "")
+        setName(fileName)
       }
     }
-  };
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+    e.preventDefault()
 
     if (!file) {
-      setError("Please select a file");
-      return;
+      setError("Please select a file")
+      return
     }
 
     if (!name.trim()) {
-      setError("Please enter a dataset name");
-      return;
+      setError("Please enter a dataset name")
+      return
     }
 
-    setLoading(true);
-    setError("");
+    setLoading(true)
+    setError("")
 
     try {
-      const formData = new FormData();
+      const formData = new FormData()
 
       // Add the file to FormData
-      formData.append("dataset", file);
-      formData.append("name", name.trim());
-      formData.append("description", description.trim() || "");
+      formData.append("dataset", file)
+      formData.append("name", name.trim())
+      formData.append("description", description.trim() || "")
 
-      const result = await apiService.createDataset(formData);
+      createDatasetMutation.mutate(formData)
+      // const result = await apiService.createDataset(formData);
 
-      if (result.success) {
-        onSuccess();
-        resetForm();
-        onOpenChange(false);
-        toast({
-          title: "Success",
-          description: result.message,
-        });
-      }
+      // if (result.success) {
+      //   onSuccess();
+      //   resetForm();
+      //   onOpenChange(false);
+      //   toast({
+      //     title: "Success",
+      //     description: result.message,
+      //   });
+      // }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Failed to create dataset");
+      setError(err instanceof Error ? err.message : "Failed to create dataset")
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const resetForm = () => {
-    setFile(null);
-    setName("");
-    setDescription("");
-    setError("");
-    setLoading(false);
-  };
+    setFile(null)
+    setName("")
+    setDescription("")
+    setError("")
+    setLoading(false)
+  }
 
   const handleOpenChange = (newOpen: boolean) => {
     if (!newOpen && !loading) {
-      resetForm();
+      resetForm()
     }
-    onOpenChange(newOpen);
-  };
+    onOpenChange(newOpen)
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -246,5 +262,5 @@ export function CreateDatasetModal({
         </form>
       </DialogContent>
     </Dialog>
-  );
+  )
 }
