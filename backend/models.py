@@ -1,5 +1,5 @@
 # Standard library imports
-from typing import List
+from typing import List, Literal, Union
 
 # Third-party imports
 from pydantic import BaseModel, ConfigDict, Field
@@ -20,6 +20,7 @@ class BaseSchema(BaseModel):
 class Dataset(BaseSchema, SyftDataset):
     private_size: str = Field(default="0 B")
     mock_size: str = Field(default="0 B")
+    source: Union[None, Literal["shopify"]] = Field(default=None)
 
 
 class Job(BaseSchema, SyftJob):

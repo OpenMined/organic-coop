@@ -2,17 +2,29 @@
 from pathlib import Path
 import tempfile
 from fastapi.responses import JSONResponse, StreamingResponse
+from pydantic import BaseModel, Field, HttpUrl
 import requests
 
 # Third-party imports
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, Body
+from fastapi import (
+    APIRouter,
+    Depends,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    Body,
+)
 from loguru import logger
 from syft_core import Client
 from syft_core.url import SyftBoxURL
 from syft_rds import init_session
 from syft_rds.models.models import DatasetUpdate
 from filelock import FileLock
-from typing import List
+from typing import List, Optional
+
+from .lib.shopify import shopify_json_to_dataframe
+from .sources import find_source
 
 
 # Local imports
@@ -68,6 +80,7 @@ async def list_datasets(
             dataset.mock_size = (
                 mock_file_path.stat().st_size if mock_file_path else "1 B"
             )
+            dataset.source = find_source(dataset.uid)
         return ListDatasetsResponse(datasets=datasets)
     except Exception as e:
         logger.error(f"Error listing datasets: {e}")
@@ -153,6 +166,90 @@ async def create_dataset(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+class AddShopifyRequestBody(BaseModel):
+    url: HttpUrl
+    name: str = Field(min_length=1)
+    pat: str = Field(min_length=1)
+    description: Optional[str]
+
+
+@v1_router.post(
+    "/datasets/add-from-shopify",
+    status_code=201,
+    tags=["datasets"],
+    summary="Add a dataset from Shopify",
+)
+async def add_dataset_from_shopify(
+    data: AddShopifyRequestBody,
+    client: Client = Depends(get_client),
+):
+    try:
+        datasite_client = init_session(client.email)
+
+        # download data from Shopify
+        headers = {
+            "X-Shopify-Access-Token": data.pat,
+            "Content-Type": "application/json",
+        }
+
+        response = requests.get(
+            f"{data.url}/admin/api/2024-01/products.json", headers=headers
+        )
+
+        products_json = response.json()
+
+        dataset_df = shopify_json_to_dataframe(products_json)
+
+        # Save uploaded files
+        with tempfile.TemporaryDirectory() as temp_dir:
+            real_path = Path(temp_dir) / "real"
+            real_path.mkdir(parents=True, exist_ok=True)
+            real_dataset_path = real_path / f"shopify.csv"
+            real_dataset_path.write_text(dataset_df.to_csv())
+            logger.debug(f"Uploaded dataset temporarily saved to: {real_dataset_path}")
+
+            # TODO auto-generate mock dataset
+            mock_path = Path(temp_dir) / "mock"
+            mock_path.mkdir(parents=True, exist_ok=True)
+            mock_dataset_path = mock_path / f"shopify.csv"
+
+            # Hardcoded GitHub raw CSV URL
+            github_csv_url = "https://raw.githubusercontent.com/OpenMined/datasets/refs/heads/main/enclave/crop_stock_data.csv"
+            try:
+                response = requests.get(github_csv_url)
+                response.raise_for_status()
+                mock_dataset_path.write_bytes(response.content)
+                logger.debug(
+                    f"Mock dataset downloaded and saved to: {mock_dataset_path}"
+                )
+            except Exception as e:
+                logger.error(f"Failed to download mock dataset: {e}")
+                raise HTTPException(
+                    status_code=400,
+                    detail=f"Failed to download mock dataset from GitHub: {e}",
+                )
+
+            # TODO fix None bug in syft_rds/client/local_stores/dataset.py:274 (if not Path(description_path).exists())
+            dummy_description_path = Path(temp_dir) / "dummy_description.txt"
+            dummy_description_path.touch()
+
+            dataset = datasite_client.dataset.create(
+                name=data.name,
+                summary=data.description,
+                path=real_path,
+                mock_path=mock_path,
+                description_path=dummy_description_path,
+                auto_approval=get_auto_approve_list(client),
+            )
+            logger.debug(f"Dataset created: {dataset}")
+            return dataset
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error creating dataset: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 @v1_router.put(
     "/datasets/{dataset_name}",
     tags=["datasets"],
@@ -180,8 +277,7 @@ async def delete_dataset(
         delete_res = datasite_client.dataset.delete(dataset_name)
         if not delete_res:
             raise HTTPException(
-                status_code=404,
-                detail=f"Unable to delete dataset '{dataset_name}'"
+                status_code=404, detail=f"Unable to delete dataset '{dataset_name}'"
             )
         logger.debug(f"Dataset {dataset_name} deleted successfully")
         return JSONResponse(
