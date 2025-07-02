@@ -17,14 +17,12 @@ import {
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2, CableIcon } from "lucide-react"
-import { apiService } from "@/lib/api/api"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { AddShopifyDatasetFormSchema, datasetsApi } from "@/lib/api/datasets"
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -40,24 +38,23 @@ interface AddShopifyDatasetModalProps {
 export function AddShopifyDatasetModal({
   open,
   onOpenChange,
-  onSuccess,
 }: AddShopifyDatasetModalProps) {
   const { toast } = useToast()
-  const [apiKey, setApiKey] = useState("")
-  const [description, setDescription] = useState("")
   const [error, setError] = useState("")
 
   const queryClient = useQueryClient()
 
   const addShopifyDatasetMutation = useMutation({
     mutationFn: datasetsApi.addShopifyDataset,
+    onError: (error) => {
+      console.debug(error)
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["datasets"] })
       toast({
         title: "Success",
         description: "Added a new dataset from Shopify",
       })
-      onSuccess?.()
     },
   })
 
@@ -87,6 +84,32 @@ export function AddShopifyDatasetModal({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dataset Name *</FormLabel>
+                  <FormControl>
+                    <Input placeholder="shopify_data" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="description"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Description (optional)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Data from ..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
               name="url"
               render={({ field }) => (
                 <FormItem>
@@ -94,33 +117,23 @@ export function AddShopifyDatasetModal({
                   <FormControl>
                     <Input placeholder="https://your-store.com" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    This is your public display name.
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <div className="space-y-2">
-              <Label htmlFor="apiKey">Admin access token *</Label>
-              <Input
-                id="apiKey"
-                value={apiKey}
-                onChange={(e) => setApiKey(e.target.value)}
-                placeholder="shpat_123..."
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description (optional)</Label>
-              <Input
-                id="description"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Dataset containing..."
-              />
-            </div>
-
+            <FormField
+              control={form.control}
+              name="pat"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Access Token</FormLabel>
+                  <FormControl>
+                    <Input placeholder="shpat_123..." {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
             {error && (
               <Alert variant="destructive">
                 <AlertDescription className="break-all">
@@ -128,12 +141,14 @@ export function AddShopifyDatasetModal({
                 </AlertDescription>
               </Alert>
             )}
-
             <DialogFooter>
               <Button
                 type="button"
                 variant="outline"
-                onClick={() => onOpenChange(false)}
+                onClick={() => {
+                  onOpenChange(false)
+                  form.reset()
+                }}
                 disabled={isPending}
               >
                 Cancel

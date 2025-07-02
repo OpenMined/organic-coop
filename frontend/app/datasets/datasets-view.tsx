@@ -261,15 +261,16 @@ function AddShopifyDatasetAction() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
-    <Button onClick={() => setIsModalOpen(true)}>
-      <Cable />
-      Link Shopify Dataset
+    <>
+      <Button onClick={() => setIsModalOpen(true)}>
+        <Cable />
+        Link Shopify Dataset
+      </Button>
       <AddShopifyDatasetModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
-        onSuccess={() => setIsModalOpen(false)}
       />
-    </Button>
+    </>
   )
 }
 
