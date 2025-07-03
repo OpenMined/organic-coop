@@ -1,24 +1,24 @@
-import type { Metadata } from "next";
-import { Inter } from "next/font/google";
-import "./globals.css";
-import { Layout } from "../components/layout";
-import { Toaster } from "@/components/ui/toaster";
-import Providers from "./providers";
+import type { Metadata } from "next"
+import { Inter } from "next/font/google"
+import "./globals.css"
+import { Layout } from "../components/layout"
+import { Toaster } from "@/components/ui/toaster"
+import Providers from "./providers"
 
-const inter = Inter({ subsets: ["latin"] });
+const inter = Inter({ subsets: ["latin"] })
 
 export const metadata: Metadata = {
   title: "Organic Coop Dashboard",
   description: "Dashboard for managing datasets and jobs",
-};
+}
 
 export default function RootLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         <Providers>
           <Layout>{children}</Layout>
@@ -26,5 +26,5 @@ export default function RootLayout({
         </Providers>
       </body>
     </html>
-  );
+  )
 }

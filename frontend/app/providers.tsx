@@ -1,11 +1,13 @@
-"use client";
+"use client"
 
+import { DragDropProvider } from "@/components/drag-drop-context"
 import {
   isServer,
   QueryClient,
   QueryClientProvider,
-} from "@tanstack/react-query";
-import type { ReactNode } from "react";
+} from "@tanstack/react-query"
+import { ThemeProvider } from "next-themes"
+import type { ReactNode } from "react"
 
 function makeQueryClient() {
   return new QueryClient({
@@ -14,24 +16,30 @@ function makeQueryClient() {
         staleTime: 60 * 1000,
       },
     },
-  });
+  })
 }
 
-let browserQueryClient: QueryClient | undefined = undefined;
+let browserQueryClient: QueryClient | undefined = undefined
 
 function getQueryClient() {
   if (isServer) {
-    return makeQueryClient();
+    return makeQueryClient()
   } else {
-    if (!browserQueryClient) browserQueryClient = makeQueryClient();
-    return browserQueryClient;
+    if (!browserQueryClient) browserQueryClient = makeQueryClient()
+    return browserQueryClient
   }
 }
 
 export default function Providers({ children }: { children: ReactNode }) {
-  const queryClient = getQueryClient();
+  const queryClient = getQueryClient()
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
-  );
+    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+      <DragDropProvider>
+        <QueryClientProvider client={queryClient}>
+          {children}
+        </QueryClientProvider>
+      </DragDropProvider>
+    </ThemeProvider>
+  )
 }
