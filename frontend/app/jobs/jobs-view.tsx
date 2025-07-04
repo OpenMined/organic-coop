@@ -12,9 +12,20 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Check, X, Eye, Plus, Settings, Briefcase, Loader2 } from "lucide-react"
+import {
+  Check,
+  X,
+  Eye,
+  Plus,
+  Settings,
+  Briefcase,
+  Loader2,
+  CodeIcon,
+  Code2Icon,
+} from "lucide-react"
 import { apiService, type Job } from "@/lib/api/api"
 import { timeAgo } from "@/lib/utils"
+import { jobsApi } from "@/lib/api/jobs"
 
 export function JobsView() {
   const [jobs, setJobs] = useState<Job[]>([])
@@ -80,10 +91,10 @@ export function JobsView() {
     }
   }
 
-  const handleJobAction = (jobId: number, action: "approve" | "deny") => {
+  const handleJobAction = (jobUid: string, action: "approve" | "deny") => {
     setJobs(
       jobs.map((job) =>
-        job.id === jobId
+        job.uid === jobUid
           ? { ...job, status: action === "approve" ? "approved" : "denied" }
           : job
       )
@@ -223,12 +234,13 @@ export function JobsView() {
 
               <div className="grid gap-4">
                 {statusJobs.map((job) => (
-                  <Card key={job.id}>
+                  <Card key={job.uid}>
                     <CardHeader>
                       <div className="flex justify-between items-start">
                         <div className="space-y-1">
-                          <CardTitle className="text-lg">
+                          <CardTitle className="text-lg flex items-center gap-4">
                             {job.projectName}
+                            <OpenJobCodeAction job={job} />
                           </CardTitle>
                           <CardDescription>{job.description}</CardDescription>
                         </div>
@@ -241,8 +253,8 @@ export function JobsView() {
                       <div className="flex justify-between items-center">
                         <div className="space-y-1">
                           <p className="text-sm text-muted-foreground">
-                            Requested {timeAgo(job.requestedTime)} by{" "}
-                            {job.requesterEmail}
+                            Requested {timeAgo(job.requestedTime.toISOString())}{" "}
+                            by {job.requesterEmail}
                           </p>
                         </div>
                         <div className="flex space-x-2">
@@ -256,7 +268,7 @@ export function JobsView() {
                                 variant="outline"
                                 size="sm"
                                 onClick={() =>
-                                  handleJobAction(job.id, "approve")
+                                  handleJobAction(job.uid, "approve")
                                 }
                                 className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
                               >
@@ -266,7 +278,7 @@ export function JobsView() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleJobAction(job.id, "deny")}
+                                onClick={() => handleJobAction(job.uid, "deny")}
                                 className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
                               >
                                 <X className="mr-2 h-4 w-4" />
@@ -285,5 +297,17 @@ export function JobsView() {
         })
       )}
     </div>
+  )
+}
+
+function OpenJobCodeAction({ job }: { job: Job }) {
+  return (
+    <Button
+      variant="outline"
+      className="size-8"
+      onClick={() => jobsApi.openJobCode({ jobUid: job.uid })}
+    >
+      <Code2Icon />
+    </Button>
   )
 }

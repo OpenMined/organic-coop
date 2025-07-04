@@ -1,9 +1,6 @@
 "use client"
 
-// React
 import { useState, useEffect } from "react"
-
-// Components
 import { ActivityGraph } from "@/components/activity-graph"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -16,17 +13,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import {
@@ -36,18 +24,9 @@ import {
   SheetFooter,
   SheetHeader,
   SheetTitle,
-  SheetTrigger,
 } from "@/components/ui/sheet"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
 import { useDragDrop } from "@/components/drag-drop-context"
 import { useToast } from "@/hooks/use-toast"
-
-// Icons
 import {
   AlertTriangle,
   ArrowLeft,
@@ -55,19 +34,16 @@ import {
   Edit,
   FolderOpen,
   Loader2,
-  Settings,
   Trash2,
   Upload,
 } from "lucide-react"
-
-// Utils
 import { apiService, type Dataset } from "@/lib/api/api"
 
 interface DatasetActionsSheetProps {
   dataset: Dataset | null
   open: boolean
   onOpenChange: (open: boolean) => void
-  onSuccess: () => void
+  onSuccess?: () => void
 }
 
 type Action = "view" | "update"
@@ -139,7 +115,7 @@ export function DatasetActionsSheet({
           title: "Success",
           description: result.message,
         })
-        onSuccess()
+        onSuccess?.()
         onOpenChange(false)
       }
     } catch (err) {
@@ -163,7 +139,7 @@ export function DatasetActionsSheet({
         title: "Success",
         description: result.message,
       })
-      onSuccess()
+      onSuccess?.()
       onOpenChange(false)
     } catch (err) {
       setErrorMessage(

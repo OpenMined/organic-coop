@@ -1,12 +1,11 @@
 import { formatBytes } from "../utils"
 
 export interface Dataset {
-  id: number
+  uid: string
   name: string
   description: string
   size: string
   type: string
-  source: "local" | "shopify"
   createdAt: Date
   lastUpdated: Date
   accessRequests: number
@@ -17,7 +16,7 @@ export interface Dataset {
 }
 
 export interface Job {
-  id: number
+  uid: string
   datasetName: string
   projectName: string
   description: string
@@ -138,7 +137,7 @@ export const apiService = {
 
     return {
       datasets: data.datasets.map((dataset) => ({
-        id: dataset.uid,
+        uid: dataset.uid,
         name: dataset.name,
         description: dataset.summary,
         size: formatBytes(dataset.privateSize),
@@ -189,7 +188,7 @@ export const apiService = {
     const data: JobListResponse = await response.json()
     return {
       jobs: data.jobs.map((job) => ({
-        id: job.uid,
+        uid: job.uid,
         datasetName: job.datasetName,
         projectName: job.name,
         description: job.description,

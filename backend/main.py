@@ -28,6 +28,7 @@ app = FastAPI(
     },
 )
 if get_settings().debug:
+    print("SHOULD HAVE MIDDLEWARE")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000"],

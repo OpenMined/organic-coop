@@ -1,9 +1,12 @@
 # Standard library imports
 from pathlib import Path
 import tempfile
+import webbrowser
+import click
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, HttpUrl
 import requests
+import traceback
 
 # Third-party imports
 from fastapi import (
@@ -24,7 +27,7 @@ from filelock import FileLock
 from typing import List, Optional
 
 from .lib.shopify import shopify_json_to_dataframe
-from .sources import find_source
+from .sources import ShopifySource, add_dataset_source, find_source
 
 
 # Local imports
@@ -55,36 +58,31 @@ v1_router = APIRouter(prefix="/v1", dependencies=[Depends(get_client)])
     "/datasets",
     tags=["datasets"],
     summary="List all datasets",
-    description="Retrieve a list of all available datasets in the system",
+    description="Retrieve a list of all available datasets on the system",
 )
-async def list_datasets(
+async def get_datasets(
     client: Client = Depends(get_client),
 ) -> ListDatasetsResponse:
-    try:
-        datasite_client = init_session(client.email)
-        datasets = [
-            DatasetModel.model_validate(dataset)
-            for dataset in datasite_client.dataset.get_all()
-        ]
-        # TODO: temporary fix - rds' .dataset.create() doesn't take individual files as private and mock inputs
-        # Also a None readme is not allowed. So manually fixing them here.
-        for dataset in datasets:
-            private_file_path = next(dataset.private_path.iterdir(), None)
-            dataset.private = SyftBoxURL.from_path(private_file_path, client.workspace)
-            mock_file_path = next(dataset.mock_path.iterdir(), None)
-            dataset.mock = SyftBoxURL.from_path(mock_file_path, client.workspace)
-            dataset.readme = None
-            dataset.private_size = (
-                private_file_path.stat().st_size if private_file_path else "1 B"
-            )
-            dataset.mock_size = (
-                mock_file_path.stat().st_size if mock_file_path else "1 B"
-            )
-            dataset.source = find_source(dataset.uid)
-        return ListDatasetsResponse(datasets=datasets)
-    except Exception as e:
-        logger.error(f"Error listing datasets: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+    datasite_client = init_session(client.email)
+    datasets = [
+        DatasetModel.model_validate(dataset)
+        for dataset in datasite_client.dataset.get_all()
+    ]
+    # TODO: temporary fix - rds' .dataset.create() doesn't take individual files as private and mock inputs
+    # Also a None readme is not allowed. So manually fixing them here.
+    for dataset in datasets:
+        private_file_path = next(dataset.private_path.iterdir(), None)
+        dataset.private = SyftBoxURL.from_path(private_file_path, client.workspace)
+        mock_file_path = next(dataset.mock_path.iterdir(), None)
+        dataset.mock = SyftBoxURL.from_path(mock_file_path, client.workspace)
+        dataset.readme = None
+        dataset.private_size = (
+            private_file_path.stat().st_size if private_file_path else "1 B"
+        )
+        dataset.mock_size = mock_file_path.stat().st_size if mock_file_path else "1 B"
+        dataset.source = find_source(dataset.uid)
+
+    return {"datasets": datasets}
 
 
 @v1_router.post(
@@ -242,11 +240,17 @@ async def add_dataset_from_shopify(
                 auto_approval=get_auto_approve_list(client),
             )
             logger.debug(f"Dataset created: {dataset}")
+
+            add_dataset_source(
+                dataset.uid, ShopifySource(store_url=data.url, pat=data.pat)
+            )
+
             return dataset
     except HTTPException:
         raise
     except Exception as e:
-        logger.error(f"Error creating dataset: {e}")
+        tb_str = traceback.format_exc()
+        logger.error(f"Error creating dataset: {e}\n{tb_str}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
@@ -356,6 +360,14 @@ async def list_jobs(
     except Exception as e:
         logger.error(f"Error listing jobs: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@v1_router.get("/jobs/open-code/{job_uid}")
+async def open_job_code(job_uid: str, client: Client = Depends(get_client)):
+    datasite_client = init_session(client.email)
+    job = datasite_client.jobs.get(uid=job_uid)
+    webbrowser.open(f"file://{job.user_code.local_dir}")
+    return
 
 
 # ---------------------------------------------------------------
