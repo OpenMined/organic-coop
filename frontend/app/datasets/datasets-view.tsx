@@ -280,14 +280,16 @@ function UploadDatasetAction() {
   const [isModalOpen, setIsModalOpen] = useState(false)
 
   return (
-    <Button onClick={() => setIsModalOpen(true)}>
-      <Plus className="mr-2 h-4 w-4" />
-      Upload Dataset
+    <>
+      <Button onClick={() => setIsModalOpen(true)}>
+        <Plus className="mr-2 h-4 w-4" />
+        Upload Dataset
+      </Button>
       <CreateDatasetModal
         open={isModalOpen}
         onOpenChange={setIsModalOpen}
         onSuccess={() => setIsModalOpen(false)}
       />
-    </Button>
+    </>
   )
 }

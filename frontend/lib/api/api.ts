@@ -1,4 +1,3 @@
-import { formatBytes } from "../utils"
 import type { DatasetResponse } from "./types"
 
 export interface Job {
