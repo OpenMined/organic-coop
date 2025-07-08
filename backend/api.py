@@ -81,7 +81,6 @@ async def get_datasets(
         dataset.mock_size = mock_file_path.stat().st_size if mock_file_path else "1 B"
         dataset.source = find_source(dataset.uid)
 
-    print("DEBUG:", datasets)
     return {"datasets": datasets}
 
 
