@@ -106,47 +106,6 @@ export function DatasetActionsSheet({
     }
   }
 
-  const handleUpdateDataset = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!dataset) return
-
-    if (!datasetName.trim()) {
-      setErrorMessage("Please enter a dataset name")
-      return
-    }
-
-    setIsLoading(true)
-    setErrorMessage("")
-
-    try {
-      const formData = new FormData()
-      formData.append("name", datasetName.trim())
-      formData.append("description", datasetDescription.trim() || "")
-
-      if (selectedFile) {
-        formData.append("dataset", selectedFile)
-      }
-
-      const result = await apiService.updateDataset(dataset.uid, formData)
-
-      if (result.success) {
-        toast({
-          title: "Success",
-          description: result.message,
-        })
-        onSuccess?.()
-        onOpenChange(false)
-      }
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Failed to update dataset"
-      )
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
   const handleDownloadDataset = async () => {
     if (!dataset) return
 
@@ -212,7 +171,7 @@ export function DatasetActionsSheet({
       case "update":
         return (
           <form
-            onSubmit={handleUpdateDataset}
+            onSubmit={() => {}}
             className="space-y-4"
             onDragEnter={(e) => handleDragEnter(e, "update-dataset")}
             onDragLeave={(e) => handleDragLeave(e, "update-dataset")}
