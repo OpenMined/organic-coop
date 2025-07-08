@@ -44,22 +44,6 @@ export function AddShopifyDatasetModal({
 
   const queryClient = useQueryClient()
 
-  const addShopifyDatasetMutation = useMutation({
-    mutationFn: datasetsApi.addShopifyDataset,
-    onError: (error) => {
-      console.debug(error)
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["datasets"] })
-      toast({
-        title: "Success",
-        description: "Added a new dataset from Shopify",
-      })
-    },
-  })
-
-  const { isPending } = addShopifyDatasetMutation
-
   const form = useForm<z.infer<typeof AddShopifyDatasetFormSchema>>({
     resolver: zodResolver(AddShopifyDatasetFormSchema),
     defaultValues: {
@@ -69,6 +53,24 @@ export function AddShopifyDatasetModal({
       description: "",
     },
   })
+
+  const addShopifyDatasetMutation = useMutation({
+    mutationFn: datasetsApi.addShopifyDataset,
+    onError: (error) => {
+      console.debug(error)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["datasets"] })
+      onOpenChange(false)
+      form.reset()
+      toast({
+        title: "Success",
+        description: "Added a new dataset from Shopify",
+      })
+    },
+  })
+
+  const { isPending } = addShopifyDatasetMutation
 
   function onSubmit(values: z.infer<typeof AddShopifyDatasetFormSchema>) {
     addShopifyDatasetMutation.mutate(values)

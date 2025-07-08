@@ -15,12 +15,10 @@ import { Label } from "@/components/ui/label"
 import {
   Check,
   X,
-  Eye,
   Plus,
   Settings,
   Briefcase,
   Loader2,
-  CodeIcon,
   Code2Icon,
 } from "lucide-react"
 import { apiService, type Job } from "@/lib/api/api"

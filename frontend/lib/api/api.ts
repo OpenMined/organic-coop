@@ -1,19 +1,5 @@
 import { formatBytes } from "../utils"
-
-export interface Dataset {
-  uid: string
-  name: string
-  description: string
-  size: string
-  type: string
-  createdAt: Date
-  lastUpdated: Date
-  accessRequests: number
-  permissions: string[]
-  usersCount: number
-  requestsCount: number
-  activityData: number[]
-}
+import type { DatasetResponse } from "./types"
 
 export interface Job {
   uid: string
@@ -23,32 +9,6 @@ export interface Job {
   requestedTime: Date
   requesterEmail: string
   status: "pending" | "approved" | "denied"
-}
-
-interface DatasetResponse {
-  uid: string
-  createdBy: string
-  createdAt: string
-  updatedAt: string
-  clientId: string
-  name: string
-  private: string
-  privateSize: number
-  mock: string
-  mockSize: number
-  summary: string
-  readme: string
-  tags: string[]
-  runtime: {
-    cmd: string[]
-    imageName: string | null
-    mountDir: string | null
-  }
-  autoApproval: string[]
-}
-
-interface DatasetListResponse {
-  datasets: DatasetResponse[]
 }
 
 interface JobStatus {
@@ -96,63 +56,6 @@ const getBaseUrl = () => {
 }
 
 export const apiService = {
-  async getDatasets(): Promise<{ datasets: Dataset[] }> {
-    const response = await fetch(`${getBaseUrl()}/api/v1/datasets`)
-    const data: DatasetListResponse = await response.json()
-    const jobs = await this.getJobs()
-
-    const jobMap = jobs.jobs.reduce((map, job) => {
-      const jobs = map.get(job.datasetName) || []
-      map.set(job.datasetName, [...jobs, job])
-      return map
-    }, new Map<string, Job[]>())
-
-    // Get the unique users count for each dataset
-    const uniqueUsersMap = jobs.jobs.reduce((map, job) => {
-      const uniqueEmails = map.get(job.datasetName) || new Set<string>()
-      uniqueEmails.add(job.requesterEmail)
-      map.set(job.datasetName, uniqueEmails)
-      return map
-    }, new Map<string, Set<string>>())
-
-    // Get activity data for the past 12 weeks
-    const getWeekNumber = (date: Date): number => {
-      const now = new Date()
-      const diffTime = now.getTime() - date.getTime()
-      const diffWeeks = Math.floor(diffTime / (1000 * 60 * 60 * 24 * 7))
-      return diffWeeks
-    }
-
-    const activityDataMap = jobs.jobs.reduce((map, job) => {
-      const weekNumber = getWeekNumber(job.requestedTime)
-      // Only consider jobs from the past 12 weeks
-      if (weekNumber >= 0 && weekNumber < 12) {
-        const currentActivity = map.get(job.datasetName) || Array(12).fill(0)
-        // weekNumber 0 is current week, so we need to reverse the index
-        currentActivity[11 - weekNumber]++
-        map.set(job.datasetName, currentActivity)
-      }
-      return map
-    }, new Map<string, number[]>())
-
-    return {
-      datasets: data.datasets.map((dataset) => ({
-        uid: dataset.uid,
-        name: dataset.name,
-        description: dataset.summary,
-        size: formatBytes(dataset.privateSize),
-        type: dataset.private.split(".").pop() || "unknown",
-        createdAt: new Date(dataset.createdAt),
-        lastUpdated: new Date(dataset.updatedAt),
-        accessRequests: 0,
-        permissions: [],
-        usersCount: uniqueUsersMap.get(dataset.name)?.size || 0,
-        requestsCount: jobMap.get(dataset.name)?.length || 0,
-        activityData: activityDataMap.get(dataset.name) || Array(12).fill(0),
-      })),
-    }
-  },
-
   async createDataset(
     formData: FormData
   ): Promise<{ success: boolean; message: string }> {

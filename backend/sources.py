@@ -1,20 +1,22 @@
 import json
-from typing import Dict
-from pydantic import BaseModel, HttpUrl
+from typing import Dict, Literal
+from uuid import UUID
+from pydantic import BaseModel, Field, HttpUrl
 from syft_core import Client
 
 from .config import get_settings
 
 
 class ShopifySource(BaseModel):
+    type: Literal["shopify"] = Field(default="shopify")
     store_url: HttpUrl
     pat: str
 
 
-type SourcesConfig = Dict[str, ShopifySource]
+type SourcesConfig = Dict[UUID, ShopifySource]
 
 
-def find_source(dataset_uid: str):
+def find_source(dataset_uid: UUID):
     sources = load_sources()
 
     return sources.get(dataset_uid, None)
@@ -45,7 +47,7 @@ def load_sources() -> SourcesConfig:
 
     sources = {}
     for uid, source_data in raw_data.items():
-        sources[uid] = ShopifySource(**source_data)
+        sources[UUID(uid)] = ShopifySource(**source_data)
 
     return sources
 
@@ -58,13 +60,13 @@ def save_sources(sources: SourcesConfig):
 
     serializable_sources = {}
     for uid, source in sources.items():
-        serializable_sources[uid] = source.model_dump(mode="json")
+        serializable_sources[str(uid)] = source.model_dump(mode="json")
 
     with open(sources_config_path, "w") as f:
         json.dump(serializable_sources, f, indent=2)
 
 
-def add_dataset_source(uid: str, source: ShopifySource):
+def add_dataset_source(uid: UUID, source: ShopifySource):
     sources = load_sources()
     sources[uid] = source
     save_sources(sources)

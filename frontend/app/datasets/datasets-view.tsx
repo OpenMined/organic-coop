@@ -1,5 +1,6 @@
 "use client"
 
+import { FaShopify } from "react-icons/fa6"
 import { useState } from "react"
 import { ActivityGraph } from "@/components/activity-graph"
 import { CreateDatasetModal } from "@/app/datasets/components/create-dataset-modal"
@@ -10,7 +11,6 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
-  TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import {
@@ -20,12 +20,14 @@ import {
   Database,
   HardDrive,
   Plus,
+  TableIcon,
   Users,
 } from "lucide-react"
-import { apiService, type Dataset } from "@/lib/api/api"
 import { timeAgo } from "@/lib/utils"
 import { useQuery } from "@tanstack/react-query"
 import { AddShopifyDatasetModal } from "./components/add-shopify-dataset-modal"
+import type { Dataset } from "@/lib/api/types"
+import { datasetsApi } from "@/lib/api/datasets"
 
 export function DatasetsView() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null)
@@ -33,7 +35,7 @@ export function DatasetsView() {
 
   const loadDatasetsQuery = useQuery({
     queryKey: ["datasets"],
-    queryFn: () => apiService.getDatasets(),
+    queryFn: () => datasetsApi.getDatasets(),
   })
 
   const { isLoading, data } = loadDatasetsQuery
@@ -136,21 +138,29 @@ function DatasetCard({
               >
                 {dataset.name}
               </h3>
-              <TooltipProvider delayDuration={0}>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Badge
+                    variant="secondary"
+                    className="gap-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900"
+                  >
+                    <TableIcon size={12} /> {dataset.type.toUpperCase()}
+                  </Badge>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Dataset format: {dataset.type.toUpperCase()}
+                </TooltipContent>
+              </Tooltip>
+              {dataset.source?.type === "shopify" ? (
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge
-                      variant="secondary"
-                      className="bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900"
-                    >
-                      ● {dataset.type.toUpperCase()}
+                    <Badge variant="outline" className="gap-2">
+                      <FaShopify size={14} /> Shopify
                     </Badge>
                   </TooltipTrigger>
-                  <TooltipContent>
-                    Dataset format: {dataset.type.toUpperCase()}
-                  </TooltipContent>
+                  <TooltipContent>Dataset linked from Shopify</TooltipContent>
                 </Tooltip>
-              </TooltipProvider>
+              ) : null}
             </div>
 
             {/* Description */}
@@ -160,77 +170,69 @@ function DatasetCard({
 
             {/* Metadata row */}
             <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-muted-foreground">
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center space-x-1">
-                      <Users className="h-4 w-4 shrink-0" />
-                      <span className="whitespace-nowrap">
-                        {dataset.usersCount}{" "}
-                        {dataset.usersCount === 1 ? "user" : "users"}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {dataset.usersCount}{" "}
-                    {dataset.usersCount === 1 ? "user has" : "users have"}{" "}
-                    requested access to this dataset
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <Users className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap">
+                      {dataset.usersCount}{" "}
+                      {dataset.usersCount === 1 ? "user" : "users"}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {dataset.usersCount}{" "}
+                  {dataset.usersCount === 1 ? "user has" : "users have"}{" "}
+                  requested access to this dataset
+                </TooltipContent>
+              </Tooltip>
 
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center space-x-1">
-                      <ChartColumn className="h-4 w-4 shrink-0" />
-                      <span className="whitespace-nowrap">
-                        {dataset.requestsCount} requests
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    {dataset.requestsCount} total access
-                    {dataset.requestsCount === 1 ? " request" : " requests"}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center space-x-1">
-                      <Calendar className="h-4 w-4 shrink-0" />
-                      <span className="whitespace-nowrap">
-                        Updated {timeAgo(dataset.lastUpdated.toISOString())}
-                      </span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    Last updated on{" "}
-                    {dataset.lastUpdated.toLocaleDateString(undefined, {
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                    })}
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <ChartColumn className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap">
+                      {dataset.requestsCount} requests
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  {dataset.requestsCount} total access
+                  {dataset.requestsCount === 1 ? " request" : " requests"}
+                </TooltipContent>
+              </Tooltip>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <Calendar className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap">
+                      Updated {timeAgo(dataset.lastUpdated.toISOString())}
+                    </span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  Last updated on{" "}
+                  {dataset.lastUpdated.toLocaleDateString(undefined, {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </TooltipContent>
+              </Tooltip>
 
-              <TooltipProvider delayDuration={0}>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <div className="flex items-center space-x-1">
-                      <HardDrive className="h-4 w-4 shrink-0" />
-                      <span className="whitespace-nowrap">{dataset.size}</span>
-                    </div>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    The dataset is {dataset.size} in size
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <div className="flex items-center space-x-1">
+                    <HardDrive className="h-4 w-4 shrink-0" />
+                    <span className="whitespace-nowrap">{dataset.size}</span>
+                  </div>
+                </TooltipTrigger>
+                <TooltipContent>
+                  The dataset is {dataset.size} in size
+                </TooltipContent>
+              </Tooltip>
             </div>
 
             {/* User permissions pills */}

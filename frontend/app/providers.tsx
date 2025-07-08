@@ -1,6 +1,7 @@
 "use client"
 
 import { DragDropProvider } from "@/components/drag-drop-context"
+import { TooltipProvider } from "@/components/ui/tooltip"
 import {
   isServer,
   QueryClient,
@@ -37,7 +38,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
       <DragDropProvider>
         <QueryClientProvider client={queryClient}>
-          {children}
+          <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
         </QueryClientProvider>
       </DragDropProvider>
     </ThemeProvider>

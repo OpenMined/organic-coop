@@ -37,7 +37,9 @@ import {
   Trash2,
   Upload,
 } from "lucide-react"
-import { apiService, type Dataset } from "@/lib/api/api"
+import { apiService } from "@/lib/api/api"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import type { Dataset } from "@/lib/api/types"
 
 interface DatasetActionsSheetProps {
   dataset: Dataset | null
@@ -70,6 +72,24 @@ export function DatasetActionsSheet({
     handleDragOver,
     handleDrop: contextHandleDrop,
   } = useDragDrop()
+
+  const queryClient = useQueryClient()
+
+  const deleteDatasetMutation = useMutation({
+    mutationFn: ({ datasetName }: { datasetName: string }) =>
+      apiService.deleteDataset(datasetName),
+    onError: (error) => {
+      console.debug(error)
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["datasets"] })
+      onOpenChange(false)
+      toast({
+        title: "Success",
+        description: "Removed dataset",
+      })
+    },
+  })
 
   // Update form values when dataset changes
   useEffect(() => {
@@ -108,7 +128,7 @@ export function DatasetActionsSheet({
         formData.append("dataset", selectedFile)
       }
 
-      const result = await apiService.updateDataset(dataset.id, formData)
+      const result = await apiService.updateDataset(dataset.uid, formData)
 
       if (result.success) {
         toast({
@@ -127,30 +147,6 @@ export function DatasetActionsSheet({
     }
   }
 
-  const handleDeleteDataset = async () => {
-    if (!dataset) return
-
-    setIsLoading(true)
-    setErrorMessage("")
-
-    try {
-      const result = await apiService.deleteDataset(dataset.name)
-      toast({
-        title: "Success",
-        description: result.message,
-      })
-      onSuccess?.()
-      onOpenChange(false)
-    } catch (err) {
-      setErrorMessage(
-        err instanceof Error ? err.message : "Failed to delete dataset"
-      )
-    } finally {
-      setIsLoading(false)
-      setIsDeleteDialogOpen(false)
-    }
-  }
-
   const handleDownloadDataset = async () => {
     if (!dataset) return
 
@@ -158,7 +154,7 @@ export function DatasetActionsSheet({
     setErrorMessage("")
 
     try {
-      const response = await apiService.downloadDatasetPrivate(dataset.id)
+      const response = await apiService.downloadDatasetPrivate(dataset.uid)
       const blob = await response.blob()
       const url = window.URL.createObjectURL(blob)
       const downloadLink = document.createElement("a")
@@ -479,7 +475,10 @@ export function DatasetActionsSheet({
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDeleteDataset}
+              onClick={() =>
+                dataset &&
+                deleteDatasetMutation.mutate({ datasetName: dataset.name })
+              }
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
               Delete

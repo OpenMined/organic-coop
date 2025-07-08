@@ -8,6 +8,8 @@ from pydantic.alias_generators import to_camel
 # Local imports
 from syft_rds.models.models import Dataset as SyftDataset, Job as SyftJob
 
+from .sources import ShopifySource
+
 
 class BaseSchema(BaseModel):
     model_config = ConfigDict(
@@ -20,7 +22,7 @@ class BaseSchema(BaseModel):
 class Dataset(BaseSchema, SyftDataset):
     private_size: str = Field(default="0 B")
     mock_size: str = Field(default="0 B")
-    source: Union[None, Literal["shopify"]] = Field(default=None)
+    source: Union[None, ShopifySource] = Field(default=None)
 
 
 class Job(BaseSchema, SyftJob):
