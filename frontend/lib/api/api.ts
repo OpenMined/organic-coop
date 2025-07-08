@@ -10,19 +10,6 @@ export interface Job {
   status: "pending" | "approved" | "denied"
 }
 
-interface JobStatus {
-  pending_code_review: "pending_code_review"
-  job_run_failed: "job_run_failed"
-  job_run_finished: "job_run_finished"
-  rejected: "rejected"
-  shared: "shared"
-  approved: "approved"
-}
-
-const pendingStatuses = ["pending_code_review", "job_run_failed"] as const
-const approvedStatuses = ["shared", "approved", "job_run_finished"] as const
-const deniedStatuses = ["rejected"] as const
-
 interface JobResponse {
   uid: string
   createdBy: string
@@ -34,13 +21,28 @@ interface JobResponse {
   userCodeId: string
   tags: string[]
   userMetadata: Record<string, string>
-  status: JobStatus
+  status:
+    | "pending_code_review"
+    | "job_run_failed"
+    | "job_run_finished"
+    | "approved"
+    | "shared"
+    | "rejected"
   error: string
   errorMessage: string | null
   outputUrl: string
   datasetName: string
   enclave: string
 }
+
+const jobStatusMap = {
+  pending_code_review: "pending",
+  job_run_failed: "pending",
+  job_run_finished: "approved",
+  approved: "approved",
+  shared: "approved",
+  rejected: "denied",
+} as const
 
 interface JobListResponse {
   jobs: JobResponse[]
@@ -96,11 +98,7 @@ export const apiService = {
         description: job.description,
         requestedTime: new Date(job.createdAt),
         requesterEmail: job.createdBy,
-        status: pendingStatuses.includes(job.status)
-          ? "pending"
-          : approvedStatuses.includes(job.status)
-          ? "approved"
-          : "denied",
+        status: jobStatusMap[job.status],
       })),
     }
   },
