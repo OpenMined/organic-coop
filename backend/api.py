@@ -2,7 +2,6 @@
 from pathlib import Path
 import tempfile
 import webbrowser
-import click
 from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, HttpUrl
 import requests
@@ -242,7 +241,7 @@ async def add_dataset_from_shopify(
             logger.debug(f"Dataset created: {dataset}")
 
             add_dataset_source(
-                dataset.uid, ShopifySource(store_url=data.url, pat=data.pat)
+                str(dataset.uid), ShopifySource(store_url=data.url, pat=data.pat)
             )
 
             return dataset

@@ -29,7 +29,7 @@ import { AddShopifyDatasetModal } from "./components/add-shopify-dataset-modal"
 
 export function DatasetsView() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null)
-  const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false)
+  const [actionsSheetOpen, setActionsSheetOpen] = useState(false)
 
   const loadDatasetsQuery = useQuery({
     queryKey: ["datasets"],
@@ -38,13 +38,8 @@ export function DatasetsView() {
 
   const { isLoading, data } = loadDatasetsQuery
 
-  const handleDatasetClick = (dataset: Dataset) => {
-    setSelectedDataset(dataset)
-    setIsActionsSheetOpen(true)
-  }
-
   const handleActionsSheetClose = () => {
-    setIsActionsSheetOpen(false)
+    setActionsSheetOpen(false)
     setSelectedDataset(null)
   }
 
@@ -99,14 +94,21 @@ export function DatasetsView() {
           </div>
         ) : (
           datasets.map((dataset) => (
-            <DatasetCard key={dataset.id} dataset={dataset} />
+            <DatasetCard
+              key={dataset.uid}
+              dataset={dataset}
+              onSelect={() => {
+                setSelectedDataset(dataset)
+                setActionsSheetOpen(true)
+              }}
+            />
           ))
         )}
       </div>
 
       <DatasetActionsSheet
         dataset={selectedDataset}
-        open={isActionsSheetOpen}
+        open={actionsSheetOpen}
         onOpenChange={handleActionsSheetClose}
       />
     </div>
@@ -121,7 +123,7 @@ function DatasetCard({
   onSelect: () => void
 }) {
   return (
-    <Card key={dataset.id} className="hover:shadow-md transition-shadow">
+    <Card key={dataset.uid} className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
         <div className="flex justify-between items-start">
           {/* Left side content */}
@@ -130,7 +132,7 @@ function DatasetCard({
             <div className="flex items-center space-x-3">
               <h3
                 className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer"
-                onClick={() => handleDatasetClick(dataset)}
+                onClick={onSelect}
               >
                 {dataset.name}
               </h3>

@@ -304,10 +304,11 @@ function OpenJobCodeAction({ job }: { job: Job }) {
   return (
     <Button
       variant="outline"
-      className="size-8"
+      className="h-8"
       onClick={() => jobsApi.openJobCode({ jobUid: job.uid })}
     >
       <Code2Icon />
+      View Code
     </Button>
   )
 }
