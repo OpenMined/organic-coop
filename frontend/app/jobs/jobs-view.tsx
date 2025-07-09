@@ -24,84 +24,67 @@ import {
 import { apiService, type Job } from "@/lib/api/api"
 import { timeAgo } from "@/lib/utils"
 import { jobsApi } from "@/lib/api/jobs"
+import {
+  QueryClient,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from "@tanstack/react-query"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import z from "zod"
 
 export function JobsView() {
-  const [jobs, setJobs] = useState<Job[]>([])
-  const [loading, setLoading] = useState(true)
   const [autoApprovalEmails, setAutoApprovalEmails] = useState<string[]>([])
   const [newEmail, setNewEmail] = useState("")
-  const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
-    loadJobs()
-    loadAutoApprovalList()
-  }, [])
+  const loadJobsQuery = useQuery({
+    queryKey: ["jobs"],
+    queryFn: () => apiService.getJobs(),
+  })
 
-  const loadJobs = async () => {
-    try {
-      setLoading(true)
-      const response = await apiService.getJobs()
-      setJobs(response.jobs)
-    } catch (error) {
-      console.error("Failed to load jobs:", error)
-    } finally {
-      setLoading(false)
-    }
-  }
+  const { isLoading: jobsLoading, data: jobsData } = loadJobsQuery
 
-  const loadAutoApprovalList = async () => {
-    try {
-      const { datasites } = await apiService.getAutoApprovedDatasites()
-      setAutoApprovalEmails(datasites)
-    } catch (error) {
-      console.error("Failed to load auto-approval list:", error)
-    }
-  }
+  // const addAutoApprovalEmail = async () => {
+  //   if (!newEmail || autoApprovalEmails.includes(newEmail)) return
 
-  const addAutoApprovalEmail = async () => {
-    if (!newEmail || autoApprovalEmails.includes(newEmail)) return
+  //   setIsLoading(true)
+  //   try {
+  //     // Add the new email to the list and send the entire list
+  //     const updatedList = [...autoApprovalEmails, newEmail]
+  //     await apiService.setAutoApprovedDatasites(updatedList)
+  //     setAutoApprovalEmails(updatedList)
+  //     setNewEmail("")
+  //   } catch (error) {
+  //     console.error("Failed to update auto-approve list:", error)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
-    setIsLoading(true)
-    try {
-      // Add the new email to the list and send the entire list
-      const updatedList = [...autoApprovalEmails, newEmail]
-      await apiService.setAutoApprovedDatasites(updatedList)
-      setAutoApprovalEmails(updatedList)
-      setNewEmail("")
-    } catch (error) {
-      console.error("Failed to update auto-approve list:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+  // const removeAutoApprovalEmail = async (email: string) => {
+  //   setIsLoading(true)
+  //   try {
+  //     // Remove the email from the list and send the updated list
+  //     const updatedList = autoApprovalEmails.filter((e) => e !== email)
+  //     await apiService.setAutoApprovedDatasites(updatedList)
+  //     setAutoApprovalEmails(updatedList)
+  //   } catch (error) {
+  //     console.error("Failed to update auto-approve list:", error)
+  //   } finally {
+  //     setIsLoading(false)
+  //   }
+  // }
 
-  const removeAutoApprovalEmail = async (email: string) => {
-    setIsLoading(true)
-    try {
-      // Remove the email from the list and send the updated list
-      const updatedList = autoApprovalEmails.filter((e) => e !== email)
-      await apiService.setAutoApprovedDatasites(updatedList)
-      setAutoApprovalEmails(updatedList)
-    } catch (error) {
-      console.error("Failed to update auto-approve list:", error)
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleJobAction = (jobUid: string, action: "approve" | "deny") => {
-    setJobs(
-      jobs.map((job) =>
-        job.uid === jobUid
-          ? { ...job, status: action === "approve" ? "approved" : "denied" }
-          : job
-      )
-    )
-  }
-
-  const getJobsByStatus = (status: Job["status"]) => {
-    return jobs.filter((job) => job.status === status)
-  }
+  // const handleJobAction = (jobUid: string, action: "approve" | "deny") => {
+  //   setJobs(
+  //     jobs.map((job) =>
+  //       job.uid === jobUid
+  //         ? { ...job, status: action === "approve" ? "approved" : "denied" }
+  //         : job
+  //     )
+  //   )
+  // }
 
   const getStatusColor = (status: Job["status"]) => {
     switch (status) {
@@ -114,23 +97,23 @@ export function JobsView() {
     }
   }
 
-  if (loading) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-muted rounded w-1/3"></div>
-              <div className="h-3 bg-muted rounded w-2/3"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-16 bg-muted rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
-  }
+  // if (loading) {
+  //   return (
+  //     <div className="space-y-4">
+  //       {[...Array(3)].map((_, i) => (
+  //         <Card key={i} className="animate-pulse">
+  //           <CardHeader>
+  //             <div className="h-4 bg-muted rounded w-1/3"></div>
+  //             <div className="h-3 bg-muted rounded w-2/3"></div>
+  //           </CardHeader>
+  //           <CardContent>
+  //             <div className="h-16 bg-muted rounded"></div>
+  //           </CardContent>
+  //         </Card>
+  //       ))}
+  //     </div>
+  //   )
+  // }
 
   return (
     <div className="space-y-6">
@@ -141,66 +124,134 @@ export function JobsView() {
         </p>
       </div>
 
-      {/* Auto-approval Section */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center">
-            <Settings className="mr-2 h-5 w-5" />
-            Auto-approval Settings
-          </CardTitle>
-          <CardDescription>
-            Automatically approve requests from trusted datasites
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="flex space-x-2">
-            <div className="flex-1">
-              <Label htmlFor="datasite">Add trusted datasite email</Label>
-              <Input
-                id="datasite"
-                placeholder="trusted@email.com"
-                value={newEmail}
-                type="email"
-                autoComplete="off"
-                onChange={(e) => setNewEmail(e.target.value)}
-                onKeyPress={(e) => e.key === "Enter" && addAutoApprovalEmail()}
-                disabled={isLoading}
-              />
-            </div>
-            <Button
-              onClick={addAutoApprovalEmail}
-              className="mt-6"
-              disabled={isLoading || !newEmail}
-            >
-              {isLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4" />
-              )}
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {autoApprovalEmails.map((datasite_email) => (
-              <Badge
-                key={datasite_email}
-                variant="secondary"
-                className="flex items-center gap-1"
-              >
-                {datasite_email}
-                <button
-                  onClick={() => removeAutoApprovalEmail(datasite_email)}
-                  className="ml-1 hover:text-destructive"
-                  disabled={isLoading}
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              </Badge>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+      <AutoApprovalSection />
+      <JobsSection />
+    </div>
+  )
+}
 
-      {/* Jobs Sections */}
+function AutoApprovalSection() {
+  const [newEmailValue, setNewEmailValue] = useState("")
+
+  const queryClient = useQueryClient()
+
+  const loadDataQuery = useQuery({
+    queryKey: ["autoApproved"],
+    queryFn: () => apiService.getAutoApprovedDatasites(),
+  })
+  const { isLoading, data } = loadDataQuery
+
+  const updateAutoApprovedEmailMutation = useMutation({
+    mutationFn: async ({
+      action,
+      autoApprovedEmails,
+      email,
+    }: {
+      action: "ADD" | "REMOVE"
+      autoApprovedEmails: string[]
+      email: string
+    }) => {
+      if (!email) return
+
+      if (action === "REMOVE") {
+        const updatedList = autoApprovedEmails.filter((e) => e !== email)
+        return apiService.setAutoApprovedDatasites(updatedList)
+      }
+
+      if (action === "ADD") {
+        if (autoApprovedEmails.includes(email)) return
+        const updatedList = [...autoApprovedEmails, email]
+        return apiService.setAutoApprovedDatasites(updatedList)
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["autoApproved"] })
+      setNewEmailValue("")
+    },
+  })
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center">
+          <Settings className="mr-2 h-5 w-5" />
+          Auto-approval Settings
+        </CardTitle>
+        <CardDescription>
+          Automatically approve requests from trusted datasites
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <form className="flex space-x-2">
+          <div className="flex-1">
+            <Label htmlFor="datasite">Add trusted datasite email</Label>
+            <Input
+              id="datasite"
+              placeholder="trusted@email.com"
+              value={newEmailValue}
+              type="email"
+              autoComplete="off"
+              onChange={(e) => setNewEmailValue(e.target.value)}
+              // onKeyPress={(e) => e.key === "Enter" && addAutoApprovalEmail()}
+              disabled={isLoading}
+            />
+          </div>
+          <Button
+            onClick={() =>
+              updateAutoApprovedEmailMutation.mutate({
+                action: "ADD",
+                autoApprovedEmails: data?.datasites ?? [],
+                email: newEmailValue,
+              })
+            }
+            className="mt-6"
+            disabled={isLoading}
+          >
+            {isLoading ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <Plus className="h-4 w-4" />
+            )}
+          </Button>
+        </form>
+        <div className="flex flex-wrap gap-2">
+          {data?.datasites.map((datasiteEmail) => (
+            <Badge
+              key={datasiteEmail}
+              variant="secondary"
+              className="flex items-center gap-1"
+            >
+              {datasiteEmail}
+              <button
+                onClick={() =>
+                  updateAutoApprovedEmailMutation.mutate({
+                    action: "REMOVE",
+                    email: datasiteEmail,
+                    autoApprovedEmails: data.datasites,
+                  })
+                }
+                className="ml-1 hover:text-destructive"
+                disabled={isLoading}
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </Badge>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+function JobsSection() {
+  const jobs = []
+
+  const getJobsByStatus = (status: Job["status"]) => {
+    return jobs.filter((job) => job.status === status)
+  }
+
+  return (
+    <>
       {jobs.length === 0 ? (
         <div className="text-center py-12">
           <div className="mx-auto max-w-md">
@@ -238,13 +289,13 @@ export function JobsView() {
                         <div className="space-y-1">
                           <CardTitle className="text-lg flex items-center gap-4">
                             {job.projectName}
-                            <OpenJobCodeAction job={job} />
+                            <ViewJobCodeButton job={job} />
                           </CardTitle>
                           <CardDescription>{job.description}</CardDescription>
                         </div>
-                        <Badge className={getStatusColor(job.status)}>
+                        {/* <Badge className={getStatusColor(job.status)}>
                           {job.status}
-                        </Badge>
+                        </Badge> */}
                       </div>
                     </CardHeader>
                     <CardContent>
@@ -265,9 +316,9 @@ export function JobsView() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() =>
-                                  handleJobAction(job.uid, "approve")
-                                }
+                                // onClick={() =>
+                                //   handleJobAction(job.uid, "approve")
+                                // }
                                 className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
                               >
                                 <Check className="mr-2 h-4 w-4" />
@@ -276,7 +327,7 @@ export function JobsView() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                onClick={() => handleJobAction(job.uid, "deny")}
+                                // onClick={() => handleJobAction(job.uid, "deny")}
                                 className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
                               >
                                 <X className="mr-2 h-4 w-4" />
@@ -294,11 +345,11 @@ export function JobsView() {
           )
         })
       )}
-    </div>
+    </>
   )
 }
 
-function OpenJobCodeAction({ job }: { job: Job }) {
+function ViewJobCodeButton({ job }: { job: Job }) {
   return (
     <Button
       variant="outline"
