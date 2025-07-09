@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { ActivityGraph } from "@/components/activity-graph"
+import { ActivityGraph } from "@/app/datasets/components/activity-graph"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
   AlertDialog,
