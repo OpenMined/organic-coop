@@ -45,26 +45,6 @@ export function DatasetsView() {
     setSelectedDataset(null)
   }
 
-  if (isLoading || !data) {
-    return (
-      <div className="space-y-4">
-        {[...Array(3)].map((_, i) => (
-          <Card key={i} className="animate-pulse">
-            <CardHeader>
-              <div className="h-4 bg-muted rounded w-1/3"></div>
-              <div className="h-3 bg-muted rounded w-2/3"></div>
-            </CardHeader>
-            <CardContent>
-              <div className="h-20 bg-muted rounded"></div>
-            </CardContent>
-          </Card>
-        ))}
-      </div>
-    )
-  }
-
-  const { datasets } = data
-
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
@@ -80,33 +60,54 @@ export function DatasetsView() {
         </div>
       </div>
 
-      <div className="space-y-4">
-        {datasets.length === 0 ? (
-          <div className="mx-auto max-w-md h-96 flex flex-col items-center justify-center">
-            <Database
-              className="size-16 text-muted-foreground mb-6"
-              strokeWidth={1.5}
-            />
-            <h3 className="text-lg font-medium text-foreground">
-              No datasets found
-            </h3>
-            <p className="text-muted-foreground mb-6">
-              Create a new dataset to get started
-            </p>
-          </div>
-        ) : (
-          datasets.map((dataset) => (
-            <DatasetCard
-              key={dataset.uid}
-              dataset={dataset}
-              onSelect={() => {
-                setSelectedDataset(dataset)
-                setActionsSheetOpen(true)
-              }}
-            />
-          ))
-        )}
-      </div>
+      {isLoading || !data ? (
+        <div className="space-y-4">
+          {[...Array(3)].map((_, i) => (
+            <Card key={i} className="animate-pulse">
+              <CardContent className="p-6 flex justify-between items-end">
+                <div className="space-y-3 w-2/3">
+                  <div className="h-7 bg-muted rounded w-1/3"></div>
+                  <div className="h-5 bg-muted rounded w-2/3"></div>
+                  <div className="flex gap-4">
+                    <div className="h-5 bg-muted rounded w-24"></div>
+                    <div className="h-5 bg-muted rounded w-32"></div>
+                    <div className="h-5 bg-muted rounded w-48"></div>
+                  </div>
+                </div>
+                <div className="h-16 bg-muted rounded w-[188px]" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (
+        <div className="space-y-4">
+          {data.datasets.length === 0 ? (
+            <div className="mx-auto max-w-md h-96 flex flex-col items-center justify-center">
+              <Database
+                className="size-16 text-muted-foreground mb-6"
+                strokeWidth={1.5}
+              />
+              <h3 className="text-lg font-medium text-foreground">
+                No datasets found
+              </h3>
+              <p className="text-muted-foreground mb-6">
+                Create a new dataset to get started
+              </p>
+            </div>
+          ) : (
+            data.datasets.map((dataset) => (
+              <DatasetCard
+                key={dataset.uid}
+                dataset={dataset}
+                onSelect={() => {
+                  setSelectedDataset(dataset)
+                  setActionsSheetOpen(true)
+                }}
+              />
+            ))
+          )}
+        </div>
+      )}
 
       <DatasetActionsSheet
         dataset={selectedDataset}
@@ -127,9 +128,9 @@ function DatasetCard({
   return (
     <Card key={dataset.uid} className="hover:shadow-md transition-shadow">
       <CardContent className="p-6">
-        <div className="flex justify-between items-start">
+        <div className="flex justify-between">
           {/* Left side content */}
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 flex flex-col justify-between gap-3">
             {/* Title and badge */}
             <div className="flex items-center space-x-3">
               <h3
@@ -236,21 +237,23 @@ function DatasetCard({
             </div>
 
             {/* User permissions pills */}
-            <div className="flex flex-wrap gap-2">
-              {dataset.permissions.map((email, index) => (
-                <Badge
-                  key={index}
-                  variant="outline"
-                  className="text-xs bg-muted"
-                >
-                  {email}
-                </Badge>
-              ))}
-            </div>
+            {dataset.permissions.length > 0 ? (
+              <div className="flex flex-wrap gap-2">
+                {dataset.permissions.map((email, index) => (
+                  <Badge
+                    key={index}
+                    variant="outline"
+                    className="text-xs bg-muted"
+                  >
+                    {email}
+                  </Badge>
+                ))}
+              </div>
+            ) : null}
           </div>
 
           {/* Right side - Activity graph */}
-          <div className="ml-8">
+          <div className="ml-8 flex items-end">
             <ActivityGraph data={dataset.activityData} />
           </div>
         </div>
