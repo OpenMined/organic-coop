@@ -9,19 +9,18 @@ import { cn } from "@/lib/utils"
 
 interface ActivityGraphProps {
   data: number[]
+  chartHeightPx?: number
   className?: string
-  fullWidth?: boolean
 }
 
 const CHART_HEIGHT_PX = 96
 
 export function ActivityGraph({
   data,
-  className = "",
-  fullWidth = false,
+  className,
+  chartHeightPx = CHART_HEIGHT_PX,
 }: ActivityGraphProps) {
   const maxValue = Math.max(...data)
-  console.debug(maxValue)
 
   const getIntensity = (value: number) => {
     if (value === 0) return 0
@@ -70,8 +69,8 @@ export function ActivityGraph({
 
   return (
     <div
-      className={`flex items-end gap-1 ${className}`}
-      style={{ height: CHART_HEIGHT_PX }}
+      className={cn("flex items-end gap-1 w-64", className)}
+      style={{ height: chartHeightPx }}
     >
       {data.map((value, index) => {
         const { start, end } = getWeekDateRange(index)
@@ -79,15 +78,15 @@ export function ActivityGraph({
           <Tooltip key={index} delayDuration={0}>
             <TooltipTrigger asChild>
               <div
-                className={cn("flex items-end", fullWidth ? "w-full" : "w-3")}
-                style={{ height: CHART_HEIGHT_PX }}
+                className={cn("flex items-end flex-1")}
+                style={{ height: chartHeightPx }}
               >
                 <div
                   className={`w-full h-full rounded-sm ${getColor(
                     getIntensity(value)
                   )} transition-colors hover:opacity-80`}
                   style={{
-                    height: computeBarHeight(value, maxValue),
+                    height: computeBarHeight(value, maxValue, chartHeightPx),
                   }}
                 />
               </div>
@@ -107,8 +106,12 @@ export function ActivityGraph({
   )
 }
 
-function computeBarHeight(value: number, maxValue: number) {
+function computeBarHeight(
+  value: number,
+  maxValue: number,
+  chartHeightPx: number
+) {
   const minHeight = 8
   if (maxValue === 0) return minHeight
-  return Math.max(minHeight, (value / maxValue) * 96)
+  return Math.max(minHeight, (value / maxValue) * chartHeightPx)
 }

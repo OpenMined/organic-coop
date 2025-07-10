@@ -1,7 +1,7 @@
 "use client"
 
 import { FaShopify } from "react-icons/fa6"
-import { useState } from "react"
+import { useState, type ReactNode } from "react"
 import { ActivityGraph } from "@/app/datasets/components/activity-graph"
 import { CreateDatasetModal } from "@/app/datasets/components/create-dataset-modal"
 import { DatasetActionsSheet } from "@/app/datasets/components/dataset-actions-sheet"
@@ -28,6 +28,7 @@ import { useQuery } from "@tanstack/react-query"
 import { AddShopifyDatasetModal } from "./components/add-shopify-dataset-modal"
 import type { Dataset } from "@/lib/api/types"
 import { datasetsApi } from "@/lib/api/datasets"
+import { DatasetMetaBadge } from "./components/dataset-meta-badge"
 
 export function DatasetsView() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null)
@@ -113,7 +114,7 @@ function DatasetCard({
       <CardContent className="p-6 flex justify-between">
         {/* Left side content */}
         <div className="flex-1 flex flex-col justify-between gap-3">
-          {/* Title and badge */}
+          {/* Title and badges */}
           <div>
             <div className="flex items-center gap-3">
               <h3
@@ -122,29 +123,35 @@ function DatasetCard({
               >
                 {dataset.name}
               </h3>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Badge
-                    variant="secondary"
-                    className="gap-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 hover:bg-green-100 dark:hover:bg-green-900"
-                  >
-                    <TableIcon size={12} /> {dataset.type.toUpperCase()}
-                  </Badge>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Dataset format: {dataset.type.toUpperCase()}
-                </TooltipContent>
-              </Tooltip>
-              {dataset.source?.type === "shopify" ? (
+              {/* Dataset Badges */}
+              <div className="flex items-center gap-1">
                 <Tooltip>
                   <TooltipTrigger asChild>
-                    <Badge variant="outline" className="gap-2">
-                      <FaShopify size={14} /> Shopify
+                    <Badge
+                      variant="secondary"
+                      className="gap-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 dark:hover:text-green-100 hover:bg-green-100 dark:hover:bg-green-800 cursor-default transition-colors"
+                    >
+                      <TableIcon size={12} /> {dataset.type.toUpperCase()}
                     </Badge>
                   </TooltipTrigger>
-                  <TooltipContent>Dataset linked from Shopify</TooltipContent>
+                  <TooltipContent>
+                    Dataset format: {dataset.type.toUpperCase()}
+                  </TooltipContent>
                 </Tooltip>
-              ) : null}
+                {dataset.source?.type === "shopify" ? (
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Badge
+                        variant="outline"
+                        className="gap-2 cursor-default dark:hover:bg-muted transition-colors"
+                      >
+                        <FaShopify size={14} /> Shopify
+                      </Badge>
+                    </TooltipTrigger>
+                    <TooltipContent>Dataset linked from Shopify</TooltipContent>
+                  </Tooltip>
+                ) : null}
+              </div>
             </div>
             <CardDescription className="text-muted-foreground text-sm">
               {dataset.description}
@@ -152,16 +159,15 @@ function DatasetCard({
           </div>
 
           {/* Metadata row */}
-          <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-muted-foreground">
+          <div className="flex flex-wrap gap-1 -ml-2">
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center space-x-1">
+                <DatasetMetaBadge>
                   <Users className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">
-                    {dataset.usersCount}{" "}
-                    {dataset.usersCount === 1 ? "user" : "users"}
-                  </span>
-                </div>
+                  {`${dataset.usersCount} ${
+                    dataset.usersCount === 1 ? "user" : "users"
+                  }`}
+                </DatasetMetaBadge>
               </TooltipTrigger>
               <TooltipContent>
                 {dataset.usersCount}{" "}
@@ -172,12 +178,10 @@ function DatasetCard({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center space-x-1">
+                <DatasetMetaBadge>
                   <ChartColumn className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">
-                    {dataset.requestsCount} requests
-                  </span>
-                </div>
+                  {dataset.requestsCount} requests
+                </DatasetMetaBadge>
               </TooltipTrigger>
               <TooltipContent>
                 {dataset.requestsCount} total access
@@ -186,12 +190,10 @@ function DatasetCard({
             </Tooltip>
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center space-x-1">
+                <DatasetMetaBadge>
                   <Calendar className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">
-                    Updated {timeAgo(dataset.lastUpdated.toISOString())}
-                  </span>
-                </div>
+                  Updated {timeAgo(dataset.lastUpdated.toISOString())}
+                </DatasetMetaBadge>
               </TooltipTrigger>
               <TooltipContent>
                 Last updated on{" "}
@@ -207,10 +209,10 @@ function DatasetCard({
 
             <Tooltip>
               <TooltipTrigger asChild>
-                <div className="flex items-center space-x-1">
+                <DatasetMetaBadge>
                   <HardDrive className="h-4 w-4 shrink-0" />
-                  <span className="whitespace-nowrap">{dataset.size}</span>
-                </div>
+                  {dataset.size}
+                </DatasetMetaBadge>
               </TooltipTrigger>
               <TooltipContent>
                 The dataset is {dataset.size} in size
@@ -252,9 +254,9 @@ function DatasetLoadingSkeleton() {
                 <div className="h-4 bg-muted rounded w-2/3"></div>
               </div>
               <div className="flex gap-4">
-                <div className="h-5 bg-muted rounded w-24"></div>
-                <div className="h-5 bg-muted rounded w-32"></div>
-                <div className="h-5 bg-muted rounded w-48"></div>
+                <div className="h-6 bg-muted rounded w-24"></div>
+                <div className="h-6 bg-muted rounded w-32"></div>
+                <div className="h-6 bg-muted rounded w-48"></div>
               </div>
             </div>
             <div className="h-24 bg-muted rounded w-[188px]" />

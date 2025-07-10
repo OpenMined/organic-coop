@@ -319,7 +319,11 @@ export function DatasetActionsSheet({
                 </div>
               </CardHeader>
               <CardContent>
-                <ActivityGraph data={dataset.activityData} fullWidth />
+                <ActivityGraph
+                  data={dataset.activityData}
+                  className="w-full"
+                  chartHeightPx={128}
+                />
                 <div className="flex items-center justify-between text-xs text-muted-foreground mt-4 pt-4 border-t">
                   <div>Total Requests: 1</div>
                   <div>Avg: 0/week</div>
