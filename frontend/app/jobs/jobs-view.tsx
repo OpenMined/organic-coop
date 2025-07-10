@@ -102,7 +102,10 @@ function JobsSection() {
                       <div className="flex items-end justify-between">
                         <p className="text-sm text-muted-foreground">
                           Requested {timeAgo(job.requestedTime.toISOString())}{" "}
-                          by {job.requesterEmail}
+                          by{" "}
+                          <strong className="tracking-wide brightness-125">
+                            {job.requesterEmail}
+                          </strong>
                         </p>
                         <div className="flex gap-2">
                           {job.status === "pending" && (
