@@ -48,7 +48,7 @@ export function DatasetsView() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">Datasets</h1>
           <p className="text-muted-foreground">
@@ -66,15 +66,15 @@ export function DatasetsView() {
       ) : (
         <div className="space-y-4">
           {data.datasets.length === 0 ? (
-            <div className="mx-auto max-w-md h-96 flex flex-col items-center justify-center">
+            <div className="mx-auto flex h-96 max-w-md flex-col items-center justify-center">
               <Database
-                className="size-16 text-muted-foreground mb-6"
+                className="mb-6 size-16 text-muted-foreground"
                 strokeWidth={1.5}
               />
               <h3 className="text-lg font-medium text-foreground">
                 No datasets found
               </h3>
-              <p className="text-muted-foreground mb-6">
+              <p className="mb-6 text-muted-foreground">
                 Create a new dataset to get started
               </p>
             </div>
@@ -111,14 +111,14 @@ function DatasetCard({
 }) {
   return (
     <Card>
-      <CardContent className="p-6 flex justify-between">
+      <CardContent className="flex justify-between p-6">
         {/* Left side content */}
-        <div className="flex-1 flex flex-col justify-between gap-3">
+        <div className="flex flex-1 flex-col justify-between gap-3">
           {/* Title and badges */}
           <div>
             <div className="flex items-center gap-3">
               <h3
-                className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer"
+                className="cursor-pointer text-lg font-semibold text-blue-600 hover:underline"
                 onClick={onSelect}
               >
                 {dataset.name}
@@ -129,7 +129,7 @@ function DatasetCard({
                   <TooltipTrigger asChild>
                     <Badge
                       variant="secondary"
-                      className="gap-2 bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-300 dark:hover:text-green-100 hover:bg-green-100 dark:hover:bg-green-800 cursor-default transition-colors"
+                      className="cursor-default gap-2 bg-green-100 text-green-800 transition-colors hover:bg-green-100 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800 dark:hover:text-green-100"
                     >
                       <TableIcon size={12} /> {dataset.type.toUpperCase()}
                     </Badge>
@@ -143,7 +143,7 @@ function DatasetCard({
                     <TooltipTrigger asChild>
                       <Badge
                         variant="outline"
-                        className="gap-2 cursor-default dark:hover:bg-muted transition-colors"
+                        className="cursor-default gap-2 transition-colors dark:hover:bg-muted"
                       >
                         <FaShopify size={14} /> Shopify
                       </Badge>
@@ -153,13 +153,13 @@ function DatasetCard({
                 ) : null}
               </div>
             </div>
-            <CardDescription className="text-muted-foreground text-sm">
+            <CardDescription className="text-sm text-muted-foreground">
               {dataset.description}
             </CardDescription>
           </div>
 
           {/* Metadata row */}
-          <div className="flex flex-wrap gap-1 -ml-2">
+          <div className="-ml-2 flex flex-wrap gap-1">
             <Tooltip>
               <TooltipTrigger asChild>
                 <DatasetMetaBadge>
@@ -227,7 +227,7 @@ function DatasetCard({
                 <Badge
                   key={index}
                   variant="outline"
-                  className="text-xs bg-muted"
+                  className="bg-muted text-xs"
                 >
                   {email}
                 </Badge>
@@ -247,19 +247,19 @@ function DatasetLoadingSkeleton() {
     <div className="space-y-4">
       {[...Array(3)].map((_, i) => (
         <Card key={i} className="animate-pulse">
-          <CardContent className="p-6 flex justify-between">
-            <div className="flex flex-col gap-1 w-2/3 justify-between">
+          <CardContent className="flex justify-between p-6">
+            <div className="flex w-2/3 flex-col justify-between gap-1">
               <div className="space-y-1.5">
-                <div className="h-6 bg-muted rounded w-1/3"></div>
-                <div className="h-4 bg-muted rounded w-2/3"></div>
+                <div className="h-6 w-1/3 rounded bg-muted"></div>
+                <div className="h-4 w-2/3 rounded bg-muted"></div>
               </div>
               <div className="flex gap-4">
-                <div className="h-6 bg-muted rounded w-24"></div>
-                <div className="h-6 bg-muted rounded w-32"></div>
-                <div className="h-6 bg-muted rounded w-48"></div>
+                <div className="h-6 w-24 rounded bg-muted"></div>
+                <div className="h-6 w-32 rounded bg-muted"></div>
+                <div className="h-6 w-48 rounded bg-muted"></div>
               </div>
             </div>
-            <div className="h-24 bg-muted rounded w-[188px]" />
+            <div className="h-24 w-[188px] rounded bg-muted" />
           </CardContent>
         </Card>
       ))}

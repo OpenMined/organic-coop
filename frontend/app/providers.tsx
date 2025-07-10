@@ -35,7 +35,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient()
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="system" enableSystem>
+    <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
       <DragDropProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider delayDuration={0}>{children}</TooltipProvider>

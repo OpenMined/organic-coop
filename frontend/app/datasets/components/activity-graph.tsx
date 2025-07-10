@@ -78,13 +78,15 @@ export function ActivityGraph({
           <Tooltip key={index} delayDuration={0}>
             <TooltipTrigger asChild>
               <div
-                className={cn("flex items-end flex-1")}
+                className={cn(
+                  "flex items-end flex-1 brightness-100 transition hover:brightness-150"
+                )}
                 style={{ height: chartHeightPx }}
               >
                 <div
                   className={`w-full h-full rounded-sm ${getColor(
                     getIntensity(value)
-                  )} transition-colors hover:opacity-80`}
+                  )}`}
                   style={{
                     height: computeBarHeight(value, maxValue, chartHeightPx),
                   }}
@@ -111,7 +113,7 @@ function computeBarHeight(
   maxValue: number,
   chartHeightPx: number
 ) {
-  const minHeight = 8
+  const minHeight = 4
   if (maxValue === 0) return minHeight
   return Math.max(minHeight, (value / maxValue) * chartHeightPx)
 }
