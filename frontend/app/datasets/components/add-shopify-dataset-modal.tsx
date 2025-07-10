@@ -56,7 +56,7 @@ export function AddShopifyDatasetModal({
   const addShopifyDatasetMutation = useMutation({
     mutationFn: datasetsApi.addShopifyDataset,
     onError: (error) => {
-      console.debug(error)
+      console.error(error)
     },
     onSuccess: () => {
       onOpenChange(false)

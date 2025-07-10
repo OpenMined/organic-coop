@@ -1,5 +1,4 @@
 # Standard library imports
-import asyncio
 from pathlib import Path
 import tempfile
 import webbrowser
@@ -387,8 +386,6 @@ async def set_auto_approved_datasites(
 ) -> JSONResponse:
     # Create a lock file path based on the auto-approve file path
 
-    await asyncio.sleep(1)
-
     lock_file_path = get_auto_approve_file_path(client).with_suffix(".lock")
     file_lock = FileLock(str(lock_file_path))
 
@@ -440,7 +437,6 @@ async def get_auto_approved_datasites(
     """
     Get the list of datasites that are auto-approved.
     """
-    await asyncio.sleep(5)
     auto_approved_datasites = get_auto_approve_list(client)
     return ListAutoApproveResponse(datasites=auto_approved_datasites)
 

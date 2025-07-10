@@ -169,7 +169,7 @@ function DatasetCard({
                   }`}
                 </DatasetMetaBadge>
               </TooltipTrigger>
-              <TooltipContent>
+              <TooltipContent collisionPadding={8}>
                 {dataset.usersCount}{" "}
                 {dataset.usersCount === 1 ? "user has" : "users have"} requested
                 access to this dataset

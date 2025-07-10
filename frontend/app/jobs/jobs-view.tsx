@@ -11,12 +11,10 @@ import {
 import { Badge } from "@/components/ui/badge"
 import { Check, X, Briefcase, Code2Icon } from "lucide-react"
 import { apiService, type Job } from "@/lib/api/api"
-import { cn, timeAgo } from "@/lib/utils"
+import { timeAgo } from "@/lib/utils"
 import { jobsApi } from "@/lib/api/jobs"
 import { useQuery } from "@tanstack/react-query"
 import { AutoApprovalSettingsCard } from "./components/auto-approval-settings-card"
-import { useState } from "react"
-import { DebugButton } from "@/components/debug-button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { JobStatusBadge } from "./components/job-status-badge"
 
@@ -41,7 +39,6 @@ function JobsSection() {
     queryKey: ["jobs"],
     queryFn: async () => {
       const result = await apiService.getJobs()
-      console.debug("LOADED JOBS")
       return result
     },
   })
@@ -52,22 +49,12 @@ function JobsSection() {
 
   const { isPending, data } = jobsQuery
 
-  console.debug({ isPending })
-
-  const [debug, setDebug] = useState(false)
-
-  if (isPending || debug) {
-    return (
-      <>
-        <DebugButton setDebug={setDebug} />
-        <JobsLoadingSkeleton />
-      </>
-    )
+  if (isPending) {
+    return <JobsLoadingSkeleton />
   }
 
   return (
     <>
-      <DebugButton setDebug={setDebug} />
       {data?.jobs.length === 0 ? (
         <div className="text-center py-12">
           <div className="mx-auto max-w-md">

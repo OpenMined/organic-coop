@@ -79,7 +79,7 @@ export function DatasetActionsSheet({
     mutationFn: ({ datasetName }: { datasetName: string }) =>
       apiService.deleteDataset(datasetName),
     onError: (error) => {
-      console.debug(error)
+      console.error(error)
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["datasets"] })

@@ -27,7 +27,6 @@ export const AddShopifyDatasetFormSchema = z.object({
 
 export const datasetsApi = {
   addShopifyDataset: (data: z.infer<typeof AddShopifyDatasetFormSchema>) => {
-    console.debug(data)
     return apiClient.post<{}>("/api/v1/datasets/add-from-shopify", data)
   },
   async getDatasets(): Promise<{ datasets: Dataset[] }> {
