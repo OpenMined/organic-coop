@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -10,111 +9,18 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import {
-  Check,
-  X,
-  Plus,
-  Settings,
-  Briefcase,
-  Loader2,
-  Code2Icon,
-} from "lucide-react"
+import { Check, X, Briefcase, Code2Icon } from "lucide-react"
 import { apiService, type Job } from "@/lib/api/api"
-import { timeAgo } from "@/lib/utils"
+import { cn, timeAgo } from "@/lib/utils"
 import { jobsApi } from "@/lib/api/jobs"
-import {
-  QueryClient,
-  useMutation,
-  useQuery,
-  useQueryClient,
-} from "@tanstack/react-query"
-import { useForm } from "react-hook-form"
-import { zodResolver } from "@hookform/resolvers/zod"
-import z from "zod"
+import { useQuery } from "@tanstack/react-query"
+import { AutoApprovalSettingsCard } from "./components/auto-approval-settings-card"
+import { useState } from "react"
+import { DebugButton } from "@/components/debug-button"
+import { Skeleton } from "@/components/ui/skeleton"
+import { JobStatusBadge } from "./components/job-status-badge"
 
 export function JobsView() {
-  const [autoApprovalEmails, setAutoApprovalEmails] = useState<string[]>([])
-  const [newEmail, setNewEmail] = useState("")
-
-  const loadJobsQuery = useQuery({
-    queryKey: ["jobs"],
-    queryFn: () => apiService.getJobs(),
-  })
-
-  const { isLoading: jobsLoading, data: jobsData } = loadJobsQuery
-
-  // const addAutoApprovalEmail = async () => {
-  //   if (!newEmail || autoApprovalEmails.includes(newEmail)) return
-
-  //   setIsLoading(true)
-  //   try {
-  //     // Add the new email to the list and send the entire list
-  //     const updatedList = [...autoApprovalEmails, newEmail]
-  //     await apiService.setAutoApprovedDatasites(updatedList)
-  //     setAutoApprovalEmails(updatedList)
-  //     setNewEmail("")
-  //   } catch (error) {
-  //     console.error("Failed to update auto-approve list:", error)
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
-  // const removeAutoApprovalEmail = async (email: string) => {
-  //   setIsLoading(true)
-  //   try {
-  //     // Remove the email from the list and send the updated list
-  //     const updatedList = autoApprovalEmails.filter((e) => e !== email)
-  //     await apiService.setAutoApprovedDatasites(updatedList)
-  //     setAutoApprovalEmails(updatedList)
-  //   } catch (error) {
-  //     console.error("Failed to update auto-approve list:", error)
-  //   } finally {
-  //     setIsLoading(false)
-  //   }
-  // }
-
-  // const handleJobAction = (jobUid: string, action: "approve" | "deny") => {
-  //   setJobs(
-  //     jobs.map((job) =>
-  //       job.uid === jobUid
-  //         ? { ...job, status: action === "approve" ? "approved" : "denied" }
-  //         : job
-  //     )
-  //   )
-  // }
-
-  const getStatusColor = (status: Job["status"]) => {
-    switch (status) {
-      case "pending":
-        return "border-yellow-200 bg-yellow-50 text-yellow-600 dark:border-yellow-900 dark:bg-yellow-900/30 dark:text-yellow-400 hover:bg-yellow-50 dark:hover:bg-yellow-900/30"
-      case "approved":
-        return "border-emerald-200 bg-emerald-50 text-emerald-600 dark:border-emerald-900 dark:bg-emerald-900/30 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/30"
-      case "denied":
-        return "border-red-200 bg-red-50 text-red-600 dark:border-red-900 dark:bg-red-900/30 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/30"
-    }
-  }
-
-  // if (loading) {
-  //   return (
-  //     <div className="space-y-4">
-  //       {[...Array(3)].map((_, i) => (
-  //         <Card key={i} className="animate-pulse">
-  //           <CardHeader>
-  //             <div className="h-4 bg-muted rounded w-1/3"></div>
-  //             <div className="h-3 bg-muted rounded w-2/3"></div>
-  //           </CardHeader>
-  //           <CardContent>
-  //             <div className="h-16 bg-muted rounded"></div>
-  //           </CardContent>
-  //         </Card>
-  //       ))}
-  //     </div>
-  //   )
-  // }
-
   return (
     <div className="space-y-6">
       <div>
@@ -124,135 +30,39 @@ export function JobsView() {
         </p>
       </div>
 
-      <AutoApprovalSection />
+      <AutoApprovalSettingsCard />
       <JobsSection />
     </div>
   )
 }
 
-function AutoApprovalSection() {
-  const [newEmailValue, setNewEmailValue] = useState("")
-
-  const queryClient = useQueryClient()
-
-  const loadDataQuery = useQuery({
-    queryKey: ["autoApproved"],
-    queryFn: () => apiService.getAutoApprovedDatasites(),
-  })
-  const { isLoading, data } = loadDataQuery
-
-  const updateAutoApprovedEmailMutation = useMutation({
-    mutationFn: async ({
-      action,
-      autoApprovedEmails,
-      email,
-    }: {
-      action: "ADD" | "REMOVE"
-      autoApprovedEmails: string[]
-      email: string
-    }) => {
-      if (!email) return
-
-      if (action === "REMOVE") {
-        const updatedList = autoApprovedEmails.filter((e) => e !== email)
-        return apiService.setAutoApprovedDatasites(updatedList)
-      }
-
-      if (action === "ADD") {
-        if (autoApprovedEmails.includes(email)) return
-        const updatedList = [...autoApprovedEmails, email]
-        return apiService.setAutoApprovedDatasites(updatedList)
-      }
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["autoApproved"] })
-      setNewEmailValue("")
-    },
-  })
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center">
-          <Settings className="mr-2 h-5 w-5" />
-          Auto-approval Settings
-        </CardTitle>
-        <CardDescription>
-          Automatically approve requests from trusted datasites
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <form className="flex space-x-2">
-          <div className="flex-1">
-            <Label htmlFor="datasite">Add trusted datasite email</Label>
-            <Input
-              id="datasite"
-              placeholder="trusted@email.com"
-              value={newEmailValue}
-              type="email"
-              autoComplete="off"
-              onChange={(e) => setNewEmailValue(e.target.value)}
-              // onKeyPress={(e) => e.key === "Enter" && addAutoApprovalEmail()}
-              disabled={isLoading}
-            />
-          </div>
-          <Button
-            onClick={() =>
-              updateAutoApprovedEmailMutation.mutate({
-                action: "ADD",
-                autoApprovedEmails: data?.datasites ?? [],
-                email: newEmailValue,
-              })
-            }
-            className="mt-6"
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4" />
-            )}
-          </Button>
-        </form>
-        <div className="flex flex-wrap gap-2">
-          {data?.datasites.map((datasiteEmail) => (
-            <Badge
-              key={datasiteEmail}
-              variant="secondary"
-              className="flex items-center gap-1"
-            >
-              {datasiteEmail}
-              <button
-                onClick={() =>
-                  updateAutoApprovedEmailMutation.mutate({
-                    action: "REMOVE",
-                    email: datasiteEmail,
-                    autoApprovedEmails: data.datasites,
-                  })
-                }
-                className="ml-1 hover:text-destructive"
-                disabled={isLoading}
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </Badge>
-          ))}
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
 function JobsSection() {
-  const jobs = []
+  const jobsQuery = useQuery({
+    queryKey: ["jobs"],
+    queryFn: () => apiService.getJobs(),
+  })
 
-  const getJobsByStatus = (status: Job["status"]) => {
+  const getJobsByStatus = (jobs: Job[], status: Job["status"]) => {
     return jobs.filter((job) => job.status === status)
+  }
+
+  const { isPending, data } = jobsQuery
+
+  const [debug, setDebug] = useState(false)
+
+  if (isPending || debug) {
+    return (
+      <>
+        <DebugButton setDebug={setDebug} />
+        <JobsLoadingSkeleton />
+      </>
+    )
   }
 
   return (
     <>
-      {jobs.length === 0 ? (
+      <DebugButton setDebug={setDebug} />
+      {data?.jobs.length === 0 ? (
         <div className="text-center py-12">
           <div className="mx-auto max-w-md">
             <div className="mx-auto h-12 w-12 text-muted-foreground mb-4">
@@ -269,7 +79,7 @@ function JobsSection() {
         </div>
       ) : (
         (["pending", "approved", "denied"] as const).map((status) => {
-          const statusJobs = getJobsByStatus(status)
+          const statusJobs = getJobsByStatus(data?.jobs ?? [], status)
           if (statusJobs.length === 0) return null
 
           return (
@@ -289,28 +99,19 @@ function JobsSection() {
                         <div className="space-y-1">
                           <CardTitle className="text-lg flex items-center gap-4">
                             {job.projectName}
-                            <ViewJobCodeButton job={job} />
                           </CardTitle>
                           <CardDescription>{job.description}</CardDescription>
                         </div>
-                        {/* <Badge className={getStatusColor(job.status)}>
-                          {job.status}
-                        </Badge> */}
+                        <JobStatusBadge jobStatus={job.status} />
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex justify-between items-center">
-                        <div className="space-y-1">
-                          <p className="text-sm text-muted-foreground">
-                            Requested {timeAgo(job.requestedTime.toISOString())}{" "}
-                            by {job.requesterEmail}
-                          </p>
-                        </div>
-                        <div className="flex space-x-2">
-                          {/* <Button variant="outline" size="sm">
-                          <Eye className="mr-2 h-4 w-4" />
-                          View Project
-                        </Button> */}
+                      <div className="flex justify-between items-end">
+                        <p className="text-sm text-muted-foreground">
+                          Requested {timeAgo(job.requestedTime.toISOString())}{" "}
+                          by {job.requesterEmail}
+                        </p>
+                        <div className="flex gap-2">
                           {job.status === "pending" && (
                             <>
                               <Button
@@ -335,6 +136,7 @@ function JobsSection() {
                               </Button>
                             </>
                           )}
+                          <ViewJobCodeButton job={job} />
                         </div>
                       </div>
                     </CardContent>
@@ -349,11 +151,36 @@ function JobsSection() {
   )
 }
 
+function JobsLoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-7 w-64" />
+      {[...Array(3)].map((_, i) => (
+        <Card key={i}>
+          <CardContent className="p-6 h-40 flex flex-col justify-between">
+            <div className="flex justify-between">
+              <div>
+                <Skeleton className="h-8 w-80 mb-1" />
+                <Skeleton className="h-5 w-64" />
+              </div>
+              <Skeleton className="h-[22px] w-16" />
+            </div>
+            <div className="flex items-end justify-between">
+              <Skeleton className="h-5 w-96 " />
+              <Skeleton className="h-9 w-32" />
+            </div>
+          </CardContent>
+        </Card>
+      ))}
+    </div>
+  )
+}
+
 function ViewJobCodeButton({ job }: { job: Job }) {
   return (
     <Button
       variant="outline"
-      className="h-8"
+      size="sm"
       onClick={() => jobsApi.openJobCode({ jobUid: job.uid })}
     >
       <Code2Icon />
