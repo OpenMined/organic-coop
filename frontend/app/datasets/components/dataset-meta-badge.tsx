@@ -9,8 +9,8 @@ export function DatasetMetaBadge({
     <div
       {...props}
       className={cn(
-        "px-2 py-1 flex items-center space-x-1 rounded-sm cursor-default bg-transparent hover:bg-muted text-muted-foreground text-sm hover:text-foreground transition-colors whitespace-nowrap gap-2",
-        className
+        "flex cursor-default items-center gap-1.5 space-x-1 whitespace-nowrap rounded-sm bg-transparent px-2 py-0.5 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground [&>svg]:pointer-events-none [&>svg]:mb-px [&>svg]:size-4",
+        className,
       )}
     >
       {children}

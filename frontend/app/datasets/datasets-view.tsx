@@ -129,7 +129,7 @@ function DatasetCard({
                   <TooltipTrigger asChild>
                     <Badge
                       variant="secondary"
-                      className="cursor-default gap-2 bg-green-100 text-green-800 transition-colors hover:bg-green-100 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800 dark:hover:text-green-100"
+                      className="cursor-default gap-2 bg-green-100 text-green-800 transition-colors hover:bg-green-200 hover:text-green-900 dark:bg-green-900 dark:text-green-300 dark:hover:bg-green-800 dark:hover:text-green-100"
                     >
                       <TableIcon size={12} /> {dataset.type.toUpperCase()}
                     </Badge>
@@ -143,7 +143,7 @@ function DatasetCard({
                     <TooltipTrigger asChild>
                       <Badge
                         variant="outline"
-                        className="cursor-default gap-2 transition-colors dark:hover:bg-muted"
+                        className="cursor-default gap-2 transition-colors hover:bg-muted dark:hover:bg-muted"
                       >
                         <FaShopify size={14} /> Shopify
                       </Badge>

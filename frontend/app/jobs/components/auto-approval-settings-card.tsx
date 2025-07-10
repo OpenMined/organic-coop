@@ -91,16 +91,16 @@ export function AutoApprovalSettingsCard() {
       {isPending ? (
         <Loader2
           size={64}
-          className="animate-spin absolute inset-0 m-auto z-10"
+          className="absolute inset-0 z-10 m-auto animate-spin"
         />
       ) : null}
 
       <CardHeader
         className={cn(
           isMutationPending || isPending
-            ? "opacity-50 pointer-events-none"
+            ? "pointer-events-none opacity-50"
             : "opacity-100",
-          "transition-opacity duration-100 relative"
+          "relative transition-opacity duration-100",
         )}
       >
         <CardTitle className="flex items-center">
@@ -114,15 +114,15 @@ export function AutoApprovalSettingsCard() {
       <CardContent
         className={cn(
           isMutationPending || isPending
-            ? "opacity-50 pointer-events-none"
+            ? "pointer-events-none opacity-50"
             : "opacity-100",
-          "transition-opacity duration-100 relative"
+          "relative transition-opacity duration-100",
         )}
       >
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
-            className="flex space-x-2 items-end"
+            className="flex items-end gap-2"
           >
             <FormField
               control={form.control}
@@ -144,7 +144,7 @@ export function AutoApprovalSettingsCard() {
               )}
             />
 
-            <Button size="icon" disabled={isPending}>
+            <Button size="icon" disabled={isPending} className="shrink-0">
               {addEmailMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
@@ -153,7 +153,7 @@ export function AutoApprovalSettingsCard() {
             </Button>
           </form>
         </Form>
-        <div className="flex flex-wrap gap-2 mt-4">
+        <div className="mt-4 flex flex-wrap gap-2">
           {data?.datasites.map((datasiteEmail) => (
             <Badge
               key={datasiteEmail}
