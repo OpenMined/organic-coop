@@ -181,5 +181,5 @@ export function AutoApprovalSettingsCard() {
 }
 
 const EmailFormSchema = z.object({
-  email: z.string().email("Not a valid email address"),
+  email: z.email("Not a valid email address"),
 })
