@@ -39,7 +39,11 @@ export function JobsView() {
 function JobsSection() {
   const jobsQuery = useQuery({
     queryKey: ["jobs"],
-    queryFn: () => apiService.getJobs(),
+    queryFn: async () => {
+      const result = await apiService.getJobs()
+      console.debug("LOADED JOBS")
+      return result
+    },
   })
 
   const getJobsByStatus = (jobs: Job[], status: Job["status"]) => {
@@ -47,6 +51,8 @@ function JobsSection() {
   }
 
   const { isPending, data } = jobsQuery
+
+  console.debug({ isPending })
 
   const [debug, setDebug] = useState(false)
 

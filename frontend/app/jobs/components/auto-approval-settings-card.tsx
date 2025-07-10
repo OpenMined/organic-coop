@@ -20,12 +20,18 @@ import { apiService } from "@/lib/api/api"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Loader2, Plus, Settings, X } from "lucide-react"
+import { Loader, Loader2, Plus, Settings, X } from "lucide-react"
 import { useForm } from "react-hook-form"
 import z from "zod"
 
 export function AutoApprovalSettingsCard() {
   const queryClient = useQueryClient()
+
+  const loadDataQuery = useQuery({
+    queryKey: ["autoApproved"],
+    queryFn: async () => apiService.getAutoApprovedDatasites(),
+  })
+  const { isPending, data } = loadDataQuery
 
   const form = useForm<z.infer<typeof EmailFormSchema>>({
     resolver: zodResolver(EmailFormSchema),
@@ -33,12 +39,6 @@ export function AutoApprovalSettingsCard() {
       email: "",
     },
   })
-
-  const loadDataQuery = useQuery({
-    queryKey: ["autoApproved"],
-    queryFn: async () => apiService.getAutoApprovedDatasites(),
-  })
-  const { isPending, isFetching, data } = loadDataQuery
 
   const addEmailMutation = useMutation({
     mutationFn: async ({
@@ -87,13 +87,22 @@ export function AutoApprovalSettingsCard() {
     addEmailMutation.isPending || removeEmailMutation.isPending
 
   return (
-    <Card
-      className={cn(
-        isMutationPending ? "opacity-50 pointer-events-none" : "opacity-100",
-        "transition-opacity duration-100"
-      )}
-    >
-      <CardHeader>
+    <Card className="relative">
+      {isPending ? (
+        <Loader2
+          size={64}
+          className="animate-spin absolute inset-0 m-auto z-10"
+        />
+      ) : null}
+
+      <CardHeader
+        className={cn(
+          isMutationPending || isPending
+            ? "opacity-50 pointer-events-none"
+            : "opacity-100",
+          "transition-opacity duration-100 relative"
+        )}
+      >
         <CardTitle className="flex items-center">
           <Settings className="mr-2 h-5 w-5" />
           Auto-approval Settings
@@ -102,7 +111,14 @@ export function AutoApprovalSettingsCard() {
           Automatically approve requests from trusted datasites
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-4">
+      <CardContent
+        className={cn(
+          isMutationPending || isPending
+            ? "opacity-50 pointer-events-none"
+            : "opacity-100",
+          "transition-opacity duration-100 relative"
+        )}
+      >
         <Form {...form}>
           <form
             onSubmit={form.handleSubmit(onSubmit)}
@@ -137,7 +153,7 @@ export function AutoApprovalSettingsCard() {
             </Button>
           </form>
         </Form>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-4">
           {data?.datasites.map((datasiteEmail) => (
             <Badge
               key={datasiteEmail}
