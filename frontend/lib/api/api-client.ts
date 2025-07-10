@@ -3,7 +3,7 @@ const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
 class ApiClient {
   private async request<T>(
     endpoint: string,
-    options?: RequestInit
+    options?: RequestInit,
   ): Promise<T> {
     const url = `${API_BASE_URL}${endpoint}`
 

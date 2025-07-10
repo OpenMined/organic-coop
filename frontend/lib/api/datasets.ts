@@ -19,7 +19,7 @@ export const AddShopifyDatasetFormSchema = z.object({
           return false
         }
       },
-      { message: "URL must start with http:// or https://" }
+      { message: "URL must start with http:// or https://" },
     ),
   pat: z.string().min(1, { message: "Access Token is required" }),
   description: z.string().optional(),

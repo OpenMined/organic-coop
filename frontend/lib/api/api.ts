@@ -58,7 +58,7 @@ const getBaseUrl = () => {
 
 export const apiService = {
   async createDataset(
-    formData: FormData
+    formData: FormData,
   ): Promise<{ success: boolean; message: string }> {
     try {
       const response = await fetch(`${getBaseUrl()}/api/v1/datasets`, {
@@ -105,7 +105,7 @@ export const apiService = {
 
   async getAutoApprovedDatasites(): Promise<{ datasites: string[] }> {
     const response = await fetch(
-      `${getBaseUrl()}/api/v1/auto-approved-datasites`
+      `${getBaseUrl()}/api/v1/auto-approved-datasites`,
     )
     if (!response.ok) {
       const error = await response.json()
@@ -116,7 +116,7 @@ export const apiService = {
   },
 
   async setAutoApprovedDatasites(
-    datasites: string[]
+    datasites: string[],
   ): Promise<{ message: string }> {
     const response = await fetch(
       `${getBaseUrl()}/api/v1/auto-approved-datasites`,
@@ -126,7 +126,7 @@ export const apiService = {
           "Content-Type": "application/json",
         },
         body: JSON.stringify(datasites),
-      }
+      },
     )
 
     if (!response.ok) {
@@ -143,7 +143,7 @@ export const apiService = {
       `${getBaseUrl()}/api/v1/datasets/${encodeURIComponent(datasetName)}`,
       {
         method: "DELETE",
-      }
+      },
     )
 
     if (!response.ok) {
@@ -160,7 +160,7 @@ export const apiService = {
       `${getBaseUrl()}/api/v1/datasets/${datasetUid}/private`,
       {
         method: "GET",
-      }
+      },
     )
 
     if (!response.ok) {

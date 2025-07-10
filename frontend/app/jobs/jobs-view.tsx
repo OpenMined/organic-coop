@@ -56,15 +56,15 @@ function JobsSection() {
   return (
     <>
       {data?.jobs.length === 0 ? (
-        <div className="text-center py-12">
+        <div className="py-12 text-center">
           <div className="mx-auto max-w-md">
-            <div className="mx-auto h-12 w-12 text-muted-foreground mb-4">
+            <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
               <Briefcase className="h-12 w-12" />
             </div>
-            <h3 className="text-lg font-medium text-foreground mb-2">
+            <h3 className="mb-2 text-lg font-medium text-foreground">
               No jobs found
             </h3>
-            <p className="text-muted-foreground mb-6">
+            <p className="mb-6 text-muted-foreground">
               Jobs will appear here when researchers request access to your
               datasets
             </p>
@@ -88,9 +88,9 @@ function JobsSection() {
                 {statusJobs.map((job) => (
                   <Card key={job.uid}>
                     <CardHeader>
-                      <div className="flex justify-between items-start">
+                      <div className="flex items-start justify-between">
                         <div className="space-y-1">
-                          <CardTitle className="text-lg flex items-center gap-4">
+                          <CardTitle className="flex items-center gap-4 text-lg">
                             {job.projectName}
                           </CardTitle>
                           <CardDescription>{job.description}</CardDescription>
@@ -99,7 +99,7 @@ function JobsSection() {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="flex justify-between items-end">
+                      <div className="flex items-end justify-between">
                         <p className="text-sm text-muted-foreground">
                           Requested {timeAgo(job.requestedTime.toISOString())}{" "}
                           by {job.requesterEmail}
@@ -150,16 +150,16 @@ function JobsLoadingSkeleton() {
       <Skeleton className="h-7 w-64" />
       {[...Array(3)].map((_, i) => (
         <Card key={i}>
-          <CardContent className="p-6 h-40 flex flex-col justify-between">
+          <CardContent className="flex h-40 flex-col justify-between p-6">
             <div className="flex justify-between">
               <div>
-                <Skeleton className="h-8 w-80 mb-1" />
+                <Skeleton className="mb-1 h-8 w-80" />
                 <Skeleton className="h-5 w-64" />
               </div>
               <Skeleton className="h-[22px] w-16" />
             </div>
             <div className="flex items-end justify-between">
-              <Skeleton className="h-5 w-96 " />
+              <Skeleton className="h-5 w-96" />
               <Skeleton className="h-9 w-32" />
             </div>
           </CardContent>

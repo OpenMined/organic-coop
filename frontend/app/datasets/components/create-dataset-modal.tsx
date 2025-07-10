@@ -174,7 +174,7 @@ export function CreateDatasetModal({
           <div className="space-y-2">
             <Label htmlFor="dataset-file">Dataset File *</Label>
             <div
-              className={`relative border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+              className={`relative rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
                 activeDropZone === "create-dataset" && isDragging
                   ? "border-primary bg-primary/5"
                   : "border-muted-foreground/25 hover:border-muted-foreground/50"
@@ -195,7 +195,7 @@ export function CreateDatasetModal({
                         ? "Drop your file here"
                         : "Drop your file here or click to select"}
                     </span>
-                    <p className="text-muted-foreground mt-1">
+                    <p className="mt-1 text-muted-foreground">
                       Choose your dataset file
                     </p>
                   </div>

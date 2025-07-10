@@ -69,7 +69,7 @@ export function ActivityGraph({
 
   return (
     <div
-      className={cn("flex items-end gap-1 w-64", className)}
+      className={cn("flex w-64 items-end gap-1", className)}
       style={{ height: chartHeightPx }}
     >
       {data.map((value, index) => {
@@ -79,13 +79,13 @@ export function ActivityGraph({
             <TooltipTrigger asChild>
               <div
                 className={cn(
-                  "flex items-end flex-1 brightness-100 transition hover:brightness-150"
+                  "flex flex-1 items-end brightness-100 transition hover:brightness-150",
                 )}
                 style={{ height: chartHeightPx }}
               >
                 <div
-                  className={`w-full h-full rounded-sm ${getColor(
-                    getIntensity(value)
+                  className={`h-full w-full rounded-sm ${getColor(
+                    getIntensity(value),
                   )}`}
                   style={{
                     height: computeBarHeight(value, maxValue, chartHeightPx),
@@ -111,7 +111,7 @@ export function ActivityGraph({
 function computeBarHeight(
   value: number,
   maxValue: number,
-  chartHeightPx: number
+  chartHeightPx: number,
 ) {
   const minHeight = 4
   if (maxValue === 0) return minHeight

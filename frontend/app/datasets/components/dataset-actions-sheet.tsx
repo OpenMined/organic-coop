@@ -133,7 +133,7 @@ export function DatasetActionsSheet({
       onOpenChange(false)
     } catch (err) {
       setErrorMessage(
-        err instanceof Error ? err.message : "Failed to download dataset"
+        err instanceof Error ? err.message : "Failed to download dataset",
       )
     } finally {
       setIsLoading(false)
@@ -183,7 +183,7 @@ export function DatasetActionsSheet({
                 Update Dataset File (optional)
               </Label>
               <div
-                className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors ${
+                className={`rounded-lg border-2 border-dashed p-6 text-center transition-colors ${
                   activeDropZone === "update-dataset" && isDragging
                     ? "border-primary bg-primary/5"
                     : "border-muted-foreground/25 hover:border-muted-foreground/50"
@@ -204,7 +204,7 @@ export function DatasetActionsSheet({
                           ? "Drop your file here"
                           : "Click to select a new file"}
                       </span>
-                      <p className="text-muted-foreground mt-1">
+                      <p className="mt-1 text-muted-foreground">
                         Current file: {dataset.name}
                       </p>
                     </div>
@@ -268,7 +268,7 @@ export function DatasetActionsSheet({
       default:
         return (
           <div
-            className="flex flex-col h-full space-y-4"
+            className="flex h-full flex-col space-y-4"
             onDragEnter={(e) => handleDragEnter(e, "update-dataset")}
             onDragLeave={(e) => handleDragLeave(e, "update-dataset")}
             onDragOver={(e) => handleDragOver(e, "update-dataset")}
@@ -324,7 +324,7 @@ export function DatasetActionsSheet({
                   className="w-full"
                   chartHeightPx={128}
                 />
-                <div className="flex items-center justify-between text-xs text-muted-foreground mt-4 pt-4 border-t">
+                <div className="mt-4 flex items-center justify-between border-t pt-4 text-xs text-muted-foreground">
                   <div>Total Requests: 1</div>
                   <div>Avg: 0/week</div>
                 </div>
@@ -355,7 +355,7 @@ export function DatasetActionsSheet({
                 </Button>
                 <Button
                   variant="outline"
-                  className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
+                  className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
                   onClick={() => setIsDeleteDialogOpen(true)}
                   disabled={isLoading}
                 >
@@ -373,7 +373,7 @@ export function DatasetActionsSheet({
     <>
       <Sheet open={open} onOpenChange={handleSheetOpenChange}>
         <SheetContent
-          className="overflow-y-auto flex flex-col"
+          className="flex flex-col overflow-y-auto"
           onDragEnter={(e) => handleDragEnter(e, "update-dataset")}
           onDragLeave={(e) => handleDragLeave(e, "update-dataset")}
           onDragOver={(e) => handleDragOver(e, "update-dataset")}
