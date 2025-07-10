@@ -17,10 +17,10 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
   const isJobs = pathname === "/jobs"
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="bg-background min-h-screen">
       {/* Header */}
       {showHeader && (
-        <header className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <header className="bg-background/95 supports-backdrop-filter:bg-background/60 border-b backdrop-blur-sm">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
@@ -103,7 +103,7 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
                     viewBox="0 0 17 33"
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="h-8 w-4 fill-primary"
+                    className="fill-primary h-8 w-4"
                   >
                     <path
                       fillRule="evenodd"
@@ -136,7 +136,7 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
                       d="M9.29004 32.5L13.4007 29.3079C15.5742 27.6201 16.8435 25.0246 16.8435 22.2757V19.0789L12.7328 22.2716C10.5593 23.9581 9.29004 26.5542 9.29004 29.3038V32.5Z"
                     ></path>
                   </svg>
-                  <span className="text-xl font-bold text-primary">
+                  <span className="text-primary text-xl font-bold">
                     organic.coop
                   </span>
                 </div>
@@ -152,7 +152,7 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
 
       {/* Navigation */}
       <nav className="animate-fade-in container mx-auto px-4 py-8">
-        <div className="flex w-fit space-x-1 rounded-lg bg-muted p-1">
+        <div className="bg-muted flex w-fit space-x-1 rounded-lg p-1">
           <Link href="/datasets">
             <Button
               variant={isDatasets ? "default" : "ghost"}

@@ -106,7 +106,7 @@ export function DebugPanel() {
   }
 
   return (
-    <div className="fixed right-4 top-4 z-50 rounded-full bg-background/50 backdrop-blur-sm">
+    <div className="bg-background/50 fixed top-4 right-4 z-50 rounded-full backdrop-blur-xs">
       <Card className="flex items-center gap-8 rounded-full bg-transparent p-4 px-6 opacity-60 shadow-lg">
         <div className="flex items-center gap-2">
           <Switch checked={debugPending} onCheckedChange={setDebugPending} />
