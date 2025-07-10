@@ -7,7 +7,7 @@ import { CreateDatasetModal } from "@/app/datasets/components/create-dataset-mod
 import { DatasetActionsSheet } from "@/app/datasets/components/dataset-actions-sheet"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent } from "@/components/ui/card"
+import { Card, CardContent, CardDescription } from "@/components/ui/card"
 import {
   Tooltip,
   TooltipContent,
@@ -38,7 +38,7 @@ export function DatasetsView() {
     queryFn: () => datasetsApi.getDatasets(),
   })
 
-  const { isLoading, data } = loadDatasetsQuery
+  const { isPending, data } = loadDatasetsQuery
 
   const handleActionsSheetClose = () => {
     setActionsSheetOpen(false)
@@ -60,25 +60,8 @@ export function DatasetsView() {
         </div>
       </div>
 
-      {isLoading || !data ? (
-        <div className="space-y-4">
-          {[...Array(3)].map((_, i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6 flex justify-between items-end">
-                <div className="space-y-3 w-2/3">
-                  <div className="h-7 bg-muted rounded w-1/3"></div>
-                  <div className="h-5 bg-muted rounded w-2/3"></div>
-                  <div className="flex gap-4">
-                    <div className="h-5 bg-muted rounded w-24"></div>
-                    <div className="h-5 bg-muted rounded w-32"></div>
-                    <div className="h-5 bg-muted rounded w-48"></div>
-                  </div>
-                </div>
-                <div className="h-16 bg-muted rounded w-[188px]" />
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+      {isPending || !data ? (
+        <DatasetLoadingSkeleton />
       ) : (
         <div className="space-y-4">
           {data.datasets.length === 0 ? (
@@ -126,13 +109,13 @@ function DatasetCard({
   onSelect: () => void
 }) {
   return (
-    <Card key={dataset.uid} className="hover:shadow-md transition-shadow">
-      <CardContent className="p-6">
-        <div className="flex justify-between">
-          {/* Left side content */}
-          <div className="flex-1 flex flex-col justify-between gap-3">
-            {/* Title and badge */}
-            <div className="flex items-center space-x-3">
+    <Card>
+      <CardContent className="p-6 flex justify-between">
+        {/* Left side content */}
+        <div className="flex-1 flex flex-col justify-between gap-3">
+          {/* Title and badge */}
+          <div>
+            <div className="flex items-center gap-3">
               <h3
                 className="text-lg font-semibold text-blue-600 hover:underline cursor-pointer"
                 onClick={onSelect}
@@ -163,102 +146,122 @@ function DatasetCard({
                 </Tooltip>
               ) : null}
             </div>
-
-            {/* Description */}
-            <p className="text-muted-foreground text-sm">
+            <CardDescription className="text-muted-foreground text-sm">
               {dataset.description}
-            </p>
+            </CardDescription>
+          </div>
 
-            {/* Metadata row */}
-            <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-muted-foreground">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center space-x-1">
-                    <Users className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap">
-                      {dataset.usersCount}{" "}
-                      {dataset.usersCount === 1 ? "user" : "users"}
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {dataset.usersCount}{" "}
-                  {dataset.usersCount === 1 ? "user has" : "users have"}{" "}
-                  requested access to this dataset
-                </TooltipContent>
-              </Tooltip>
+          {/* Metadata row */}
+          <div className="flex flex-wrap gap-4 sm:gap-6 text-sm text-muted-foreground">
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-1">
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">
+                    {dataset.usersCount}{" "}
+                    {dataset.usersCount === 1 ? "user" : "users"}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {dataset.usersCount}{" "}
+                {dataset.usersCount === 1 ? "user has" : "users have"} requested
+                access to this dataset
+              </TooltipContent>
+            </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center space-x-1">
-                    <ChartColumn className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap">
-                      {dataset.requestsCount} requests
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  {dataset.requestsCount} total access
-                  {dataset.requestsCount === 1 ? " request" : " requests"}
-                </TooltipContent>
-              </Tooltip>
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center space-x-1">
-                    <Calendar className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap">
-                      Updated {timeAgo(dataset.lastUpdated.toISOString())}
-                    </span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  Last updated on{" "}
-                  {dataset.lastUpdated.toLocaleDateString(undefined, {
-                    year: "numeric",
-                    month: "long",
-                    day: "numeric",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </TooltipContent>
-              </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-1">
+                  <ChartColumn className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">
+                    {dataset.requestsCount} requests
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                {dataset.requestsCount} total access
+                {dataset.requestsCount === 1 ? " request" : " requests"}
+              </TooltipContent>
+            </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-1">
+                  <Calendar className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">
+                    Updated {timeAgo(dataset.lastUpdated.toISOString())}
+                  </span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                Last updated on{" "}
+                {dataset.lastUpdated.toLocaleDateString(undefined, {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </TooltipContent>
+            </Tooltip>
 
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <div className="flex items-center space-x-1">
-                    <HardDrive className="h-4 w-4 shrink-0" />
-                    <span className="whitespace-nowrap">{dataset.size}</span>
-                  </div>
-                </TooltipTrigger>
-                <TooltipContent>
-                  The dataset is {dataset.size} in size
-                </TooltipContent>
-              </Tooltip>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <div className="flex items-center space-x-1">
+                  <HardDrive className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">{dataset.size}</span>
+                </div>
+              </TooltipTrigger>
+              <TooltipContent>
+                The dataset is {dataset.size} in size
+              </TooltipContent>
+            </Tooltip>
+          </div>
+
+          {/* User permissions pills */}
+          {dataset.permissions.length > 0 ? (
+            <div className="flex flex-wrap gap-2">
+              {dataset.permissions.map((email, index) => (
+                <Badge
+                  key={index}
+                  variant="outline"
+                  className="text-xs bg-muted"
+                >
+                  {email}
+                </Badge>
+              ))}
             </div>
-
-            {/* User permissions pills */}
-            {dataset.permissions.length > 0 ? (
-              <div className="flex flex-wrap gap-2">
-                {dataset.permissions.map((email, index) => (
-                  <Badge
-                    key={index}
-                    variant="outline"
-                    className="text-xs bg-muted"
-                  >
-                    {email}
-                  </Badge>
-                ))}
-              </div>
-            ) : null}
-          </div>
-
-          {/* Right side - Activity graph */}
-          <div className="ml-8 flex items-end">
-            <ActivityGraph data={dataset.activityData} />
-          </div>
+          ) : null}
         </div>
+        {/* Right side - Activity graph */}
+        <ActivityGraph data={dataset.activityData} />
       </CardContent>
     </Card>
+  )
+}
+
+function DatasetLoadingSkeleton() {
+  return (
+    <div className="space-y-4">
+      {[...Array(3)].map((_, i) => (
+        <Card key={i} className="animate-pulse">
+          <CardContent className="p-6 flex justify-between">
+            <div className="flex flex-col gap-1 w-2/3 justify-between">
+              <div className="space-y-1.5">
+                <div className="h-6 bg-muted rounded w-1/3"></div>
+                <div className="h-4 bg-muted rounded w-2/3"></div>
+              </div>
+              <div className="flex gap-4">
+                <div className="h-5 bg-muted rounded w-24"></div>
+                <div className="h-5 bg-muted rounded w-32"></div>
+                <div className="h-5 bg-muted rounded w-48"></div>
+              </div>
+            </div>
+            <div className="h-24 bg-muted rounded w-[188px]" />
+          </CardContent>
+        </Card>
+      ))}
+    </div>
   )
 }
 

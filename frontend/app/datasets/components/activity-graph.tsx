@@ -13,12 +13,15 @@ interface ActivityGraphProps {
   fullWidth?: boolean
 }
 
+const CHART_HEIGHT_PX = 96
+
 export function ActivityGraph({
   data,
   className = "",
   fullWidth = false,
 }: ActivityGraphProps) {
   const maxValue = Math.max(...data)
+  console.debug(maxValue)
 
   const getIntensity = (value: number) => {
     if (value === 0) return 0
@@ -66,24 +69,25 @@ export function ActivityGraph({
   }
 
   return (
-    <div className={`flex items-end h-16 gap-1 ${className}`}>
+    <div
+      className={`flex items-end gap-1 ${className}`}
+      style={{ height: CHART_HEIGHT_PX }}
+    >
       {data.map((value, index) => {
         const { start, end } = getWeekDateRange(index)
         return (
           <Tooltip key={index} delayDuration={0}>
             <TooltipTrigger asChild>
               <div
-                className={cn(
-                  "flex items-end h-16",
-                  fullWidth ? "w-full" : "w-3"
-                )}
+                className={cn("flex items-end", fullWidth ? "w-full" : "w-3")}
+                style={{ height: CHART_HEIGHT_PX }}
               >
                 <div
                   className={`w-full h-full rounded-sm ${getColor(
                     getIntensity(value)
                   )} transition-colors hover:opacity-80`}
                   style={{
-                    height: `${Math.max(8, (value / maxValue) * 64)}px`,
+                    height: computeBarHeight(value, maxValue),
                   }}
                 />
               </div>
@@ -101,4 +105,10 @@ export function ActivityGraph({
       })}
     </div>
   )
+}
+
+function computeBarHeight(value: number, maxValue: number) {
+  const minHeight = 8
+  if (maxValue === 0) return minHeight
+  return Math.max(minHeight, (value / maxValue) * 96)
 }

@@ -59,13 +59,13 @@ export function AddShopifyDatasetModal({
       console.debug(error)
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["datasets"] })
       onOpenChange(false)
       form.reset()
       toast({
         title: "Success",
         description: "Added a new dataset from Shopify",
       })
+      return queryClient.invalidateQueries({ queryKey: ["datasets"] })
     },
   })
 
