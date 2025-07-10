@@ -69,7 +69,7 @@ export function ActivityGraph({
 
   return (
     <div
-      className={cn("flex w-64 items-end gap-1", className)}
+      className={cn("flex w-64 items-end", className)}
       style={{ height: chartHeightPx }}
     >
       {data.map((value, index) => {
@@ -79,7 +79,7 @@ export function ActivityGraph({
             <TooltipTrigger asChild>
               <div
                 className={cn(
-                  "flex flex-1 items-end brightness-100 transition hover:brightness-150",
+                  "flex flex-1 items-end px-0.5 brightness-100 transition hover:brightness-75 dark:hover:brightness-150",
                 )}
                 style={{ height: chartHeightPx }}
               >
