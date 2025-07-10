@@ -259,7 +259,7 @@ function DatasetLoadingSkeleton() {
                 <div className="h-6 w-48 rounded bg-muted"></div>
               </div>
             </div>
-            <div className="h-24 w-[188px] rounded bg-muted" />
+            <div className="h-24 w-64 rounded bg-muted" />
           </CardContent>
         </Card>
       ))}
