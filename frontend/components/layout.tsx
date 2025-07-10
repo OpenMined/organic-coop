@@ -103,7 +103,7 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
                     viewBox="0 0 17 33"
                     fill="currentColor"
                     xmlns="http://www.w3.org/2000/svg"
-                    className="fill-primary w-4 h-8"
+                    className="h-8 w-4 fill-primary"
                   >
                     <path
                       fillRule="evenodd"
@@ -151,8 +151,8 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
       )}
 
       {/* Navigation */}
-      <nav className="container animate-fade-in mx-auto px-4 py-8">
-        <div className="flex space-x-1 bg-muted p-1 rounded-lg w-fit">
+      <nav className="animate-fade-in container mx-auto px-4 py-8">
+        <div className="flex w-fit space-x-1 rounded-lg bg-muted p-1">
           <Link href="/datasets">
             <Button
               variant={isDatasets ? "default" : "ghost"}

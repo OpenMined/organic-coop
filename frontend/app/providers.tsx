@@ -1,5 +1,6 @@
 "use client"
 
+import { StateDebuggerProvider } from "@/components/debug-state"
 import { DragDropProvider } from "@/components/drag-drop-context"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import {
@@ -35,12 +36,14 @@ export default function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient()
 
   return (
-    <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-      <DragDropProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
-        </QueryClientProvider>
-      </DragDropProvider>
-    </ThemeProvider>
+    <StateDebuggerProvider show>
+      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+        <DragDropProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider delayDuration={0}>{children}</TooltipProvider>
+          </QueryClientProvider>
+        </DragDropProvider>
+      </ThemeProvider>
+    </StateDebuggerProvider>
   )
 }

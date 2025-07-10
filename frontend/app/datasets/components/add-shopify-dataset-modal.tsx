@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, CableIcon } from "lucide-react"
+import { Loader2, CableIcon, FileDownIcon } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { AddShopifyDatasetFormSchema, datasetsApi } from "@/lib/api/datasets"
@@ -34,14 +34,14 @@ interface AddShopifyDatasetModalProps {
   onSuccess?: () => void
 }
 
-export function AddShopifyDatasetModal({
+export function ImportShopifyDatasetModal({
   open,
   onOpenChange,
 }: AddShopifyDatasetModalProps) {
   const { toast } = useToast()
-  const [error, setError] = useState("")
-
   const queryClient = useQueryClient()
+
+  const [error, setError] = useState("")
 
   const form = useForm<z.infer<typeof AddShopifyDatasetFormSchema>>({
     resolver: zodResolver(AddShopifyDatasetFormSchema),
@@ -158,12 +158,12 @@ export function AddShopifyDatasetModal({
                 {isPending ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Linking...
+                    Importing...
                   </>
                 ) : (
                   <>
-                    <CableIcon className="mr-2 h-4 w-4" />
-                    Link
+                    <FileDownIcon className="h-4 w-4" />
+                    Import
                   </>
                 )}
               </Button>

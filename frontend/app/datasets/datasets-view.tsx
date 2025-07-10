@@ -1,36 +1,16 @@
 "use client"
 
-import { FaShopify } from "react-icons/fa6"
-import { useState, type ReactNode } from "react"
-import { ActivityGraph } from "@/app/datasets/components/activity-graph"
-import { CreateDatasetModal } from "@/app/datasets/components/create-dataset-modal"
 import { DatasetActionsSheet } from "@/app/datasets/components/dataset-actions-sheet"
-import { Badge } from "@/components/ui/badge"
-import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardDescription } from "@/components/ui/card"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
-import {
-  Cable,
-  Calendar,
-  ChartColumn,
-  Database,
-  HardDrive,
-  Plus,
-  TableIcon,
-  Users,
-} from "lucide-react"
-import { timeAgo } from "@/lib/utils"
-import { useQuery } from "@tanstack/react-query"
-import { AddShopifyDatasetModal } from "./components/add-shopify-dataset-modal"
-import type { Dataset } from "@/lib/api/types"
-import { datasetsApi } from "@/lib/api/datasets"
-import { DatasetMetaBadge } from "./components/dataset-meta-badge"
+import { Card, CardContent } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
+import { datasetsApi } from "@/lib/api/datasets"
+import type { Dataset } from "@/lib/api/types"
+import { useQuery } from "@tanstack/react-query"
+import { Database } from "lucide-react"
+import { useState } from "react"
 import { DatasetCard } from "./components/dataset-card"
+import { AddDatasetAction } from "./components/add-datasets-action"
+import { useDebugState } from "@/components/debug-state"
 
 export function DatasetsView() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null)
@@ -57,10 +37,8 @@ export function DatasetsView() {
             Manage your cooperative's data assets
           </p>
         </div>
-        <div className="flex gap-2">
-          <AddShopifyDatasetAction />
-          <UploadDatasetAction />
-        </div>
+
+        <AddDatasetAction />
       </div>
 
       {isPending || !data ? (
@@ -77,7 +55,7 @@ export function DatasetsView() {
                 No datasets found
               </h3>
               <p className="mb-6 text-muted-foreground">
-                Create a new dataset to get started
+                Add a new dataset to get started
               </p>
             </div>
           ) : (
@@ -127,40 +105,5 @@ function DatasetLoadingSkeleton() {
         </Card>
       ))}
     </div>
-  )
-}
-
-function AddShopifyDatasetAction() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  return (
-    <>
-      <Button onClick={() => setIsModalOpen(true)}>
-        <Cable />
-        Link Shopify Dataset
-      </Button>
-      <AddShopifyDatasetModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-      />
-    </>
-  )
-}
-
-function UploadDatasetAction() {
-  const [isModalOpen, setIsModalOpen] = useState(false)
-
-  return (
-    <>
-      <Button onClick={() => setIsModalOpen(true)}>
-        <Plus className="mr-2 h-4 w-4" />
-        Upload Dataset
-      </Button>
-      <CreateDatasetModal
-        open={isModalOpen}
-        onOpenChange={setIsModalOpen}
-        onSuccess={() => setIsModalOpen(false)}
-      />
-    </>
   )
 }
