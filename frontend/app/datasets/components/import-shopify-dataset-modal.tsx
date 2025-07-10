@@ -28,7 +28,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 
-interface AddShopifyDatasetModalProps {
+interface ImportShopifyDatasetModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onSuccess?: () => void
@@ -37,11 +37,9 @@ interface AddShopifyDatasetModalProps {
 export function ImportShopifyDatasetModal({
   open,
   onOpenChange,
-}: AddShopifyDatasetModalProps) {
+}: ImportShopifyDatasetModalProps) {
   const { toast } = useToast()
   const queryClient = useQueryClient()
-
-  const [error, setError] = useState("")
 
   const form = useForm<z.infer<typeof AddShopifyDatasetFormSchema>>({
     resolver: zodResolver(AddShopifyDatasetFormSchema),
@@ -135,13 +133,6 @@ export function ImportShopifyDatasetModal({
                 </FormItem>
               )}
             />
-            {error && (
-              <Alert variant="destructive">
-                <AlertDescription className="break-all">
-                  {error}
-                </AlertDescription>
-              </Alert>
-            )}
             <DialogFooter>
               <Button
                 type="button"

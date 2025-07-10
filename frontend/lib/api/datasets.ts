@@ -26,9 +26,6 @@ export const AddShopifyDatasetFormSchema = z.object({
 })
 
 export const datasetsApi = {
-  addShopifyDataset: (data: z.infer<typeof AddShopifyDatasetFormSchema>) => {
-    return apiClient.post<{}>("/api/v1/datasets/add-from-shopify", data)
-  },
   async getDatasets(): Promise<{ datasets: Dataset[] }> {
     const data = (await apiClient.get(`/api/v1/datasets`)) as {
       datasets: DatasetResponse[]
@@ -86,5 +83,11 @@ export const datasetsApi = {
         source: dataset.source,
       })),
     }
+  },
+  addShopifyDataset: (data: z.infer<typeof AddShopifyDatasetFormSchema>) => {
+    return apiClient.post<{}>("/api/v1/datasets/import-from-shopify", data)
+  },
+  syncShopifyDataset: (uid: string) => {
+    return apiClient.post<{}>("/api/v1/datasets/sync-shopify", { uid })
   },
 }

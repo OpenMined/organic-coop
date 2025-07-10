@@ -10,13 +10,17 @@ import {
   Calendar,
   ChartColumn,
   HardDrive,
+  RefreshCwIcon,
   TableIcon,
   Users,
 } from "lucide-react"
 import { FaShopify } from "react-icons/fa6"
 import { DatasetMetaBadge } from "./dataset-meta-badge"
-import { timeAgo } from "@/lib/utils"
+import { cn, timeAgo } from "@/lib/utils"
 import { ActivityGraph } from "./activity-graph"
+import { Button } from "@/components/ui/button"
+import { useMutation } from "@tanstack/react-query"
+import { datasetsApi } from "@/lib/api/datasets"
 
 export function DatasetCard({
   dataset,
@@ -151,9 +155,34 @@ export function DatasetCard({
             </div>
           ) : null}
         </div>
+        <div className="mr-2 flex flex-col">
+          {dataset.source?.type === "shopify" ? (
+            <SyncShopifyDatasetAction dataset={dataset} />
+          ) : null}
+        </div>
         {/* Right side - Activity graph */}
         <ActivityGraph data={dataset.activityData} />
       </CardContent>
     </Card>
+  )
+}
+
+function SyncShopifyDatasetAction({ dataset }: { dataset: Dataset }) {
+  const syncDatasetMutation = useMutation({
+    mutationFn: datasetsApi.syncShopifyDataset,
+  })
+
+  const { isPending } = syncDatasetMutation
+
+  return (
+    <Button
+      size="sm"
+      variant="outline"
+      onClick={() => syncDatasetMutation.mutate(dataset.uid)}
+      disabled={isPending}
+    >
+      <RefreshCwIcon className={cn(isPending && "animate-spin")} />
+      Sync
+    </Button>
   )
 }

@@ -15,12 +15,11 @@ import {
   FormLabel,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
-import { apiService } from "@/lib/api/api"
+import { trustedDatasitesApi } from "@/lib/api/trusted-datasites"
 import { cn } from "@/lib/utils"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query"
-import { Loader, Loader2, Plus, Settings, X } from "lucide-react"
+import { Loader2, Plus, Settings, X } from "lucide-react"
 import { useForm } from "react-hook-form"
 import z from "zod"
 
@@ -29,7 +28,7 @@ export function AutoApprovalSettingsCard() {
 
   const loadDataQuery = useQuery({
     queryKey: ["autoApproved"],
-    queryFn: async () => apiService.getAutoApprovedDatasites(),
+    queryFn: async () => trustedDatasitesApi.getTrustedDatasites(),
   })
   const { isPending, data } = loadDataQuery
 
@@ -51,7 +50,7 @@ export function AutoApprovalSettingsCard() {
       if (!email) return
       if (autoApprovedEmails.includes(email)) return
       const updatedList = [...autoApprovedEmails, email]
-      return apiService.setAutoApprovedDatasites(updatedList)
+      return trustedDatasitesApi.setTrustedDatasites(updatedList)
     },
     onSettled: async () => {
       await queryClient.invalidateQueries({ queryKey: ["autoApproved"] })
@@ -70,7 +69,7 @@ export function AutoApprovalSettingsCard() {
       if (!email) return
 
       const updatedList = autoApprovedEmails.filter((e) => e !== email)
-      return apiService.setAutoApprovedDatasites(updatedList)
+      return trustedDatasitesApi.setTrustedDatasites(updatedList)
     },
     onSettled: () =>
       queryClient.invalidateQueries({ queryKey: ["autoApproved"] }),

@@ -16,7 +16,9 @@ class ShopifySource(BaseModel):
 type SourcesConfig = Dict[UUID, ShopifySource]
 
 
-def find_source(dataset_uid: UUID):
+def find_source(dataset_uid: UUID | str):
+    if isinstance(dataset_uid, str):
+        dataset_uid = UUID(dataset_uid)
     sources = load_sources()
 
     return sources.get(dataset_uid, None)

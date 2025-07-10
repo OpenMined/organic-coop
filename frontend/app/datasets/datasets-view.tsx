@@ -93,9 +93,9 @@ function DatasetLoadingSkeleton() {
                 <Skeleton className="h-6 w-1/3 rounded bg-muted"></Skeleton>
                 <Skeleton className="h-4 w-2/3 rounded bg-muted"></Skeleton>
               </div>
-              <div className="flex h-5 gap-2">
+              <div className="flex h-4 gap-2">
                 <Skeleton className="h-full w-20"></Skeleton>
-                <Skeleton className="h-full w-28"></Skeleton>
+                <Skeleton className="h-full w-20"></Skeleton>
                 <Skeleton className="h-full w-48"></Skeleton>
                 <Skeleton className="h-full w-20"></Skeleton>
               </div>

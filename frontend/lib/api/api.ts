@@ -61,11 +61,14 @@ export const apiService = {
     formData: FormData,
   ): Promise<{ success: boolean; message: string }> {
     try {
-      const response = await fetch(`${getBaseUrl()}/api/v1/datasets`, {
-        method: "POST",
-        body: formData,
-        // Important: Don't set Content-Type header - browser will set it automatically with boundary for FormData
-      })
+      const response = await fetch(
+        `${getBaseUrl()}/api/v1/datasets/create-from-file`,
+        {
+          method: "POST",
+          body: formData,
+          // Important: Don't set Content-Type header - browser will set it automatically with boundary for FormData
+        },
+      )
 
       if (!response.ok) {
         const error = await response.json()
@@ -101,41 +104,6 @@ export const apiService = {
         status: jobStatusMap[job.status],
       })),
     }
-  },
-
-  async getAutoApprovedDatasites(): Promise<{ datasites: string[] }> {
-    const response = await fetch(
-      `${getBaseUrl()}/api/v1/auto-approved-datasites`,
-    )
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.detail || "Failed to fetch auto-approve list")
-    }
-    const data: AutoApproveResponse = await response.json()
-    return data
-  },
-
-  async setAutoApprovedDatasites(
-    datasites: string[],
-  ): Promise<{ message: string }> {
-    const response = await fetch(
-      `${getBaseUrl()}/api/v1/auto-approved-datasites`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(datasites),
-      },
-    )
-
-    if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error || "Failed to update auto-approve list")
-    }
-
-    const data = await response.json()
-    return data
   },
 
   async deleteDataset(datasetName: string): Promise<{ message: string }> {

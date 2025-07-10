@@ -25,6 +25,8 @@ from syft_rds.models.models import DatasetUpdate
 from filelock import FileLock
 from typing import List, Optional
 
+from backend.dev import debug_delay
+
 from .lib.shopify import shopify_json_to_dataframe
 from .sources import ShopifySource, add_dataset_source, find_source
 
@@ -251,6 +253,52 @@ async def add_dataset_from_shopify(
         tb_str = traceback.format_exc()
         logger.error(f"Error creating dataset: {e}\n{tb_str}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+class SyncShopifyRequestBody(BaseModel):
+    uid: str
+
+
+@v1_router.post(
+    "/datasets/sync-shopify-dataset",
+    tags=["datasets"],
+    summary="Sync a dataset imported from Shopify",
+)
+async def sync_shopify_dataset(
+    data: SyncShopifyRequestBody,
+    client: Client = Depends(get_client),
+):
+    datasite_client = init_session(client.email)
+    source = find_source(data.uid)
+    if not source:
+        raise HTTPException(
+            status_code=500,
+            detail="Tried to sync dataset without associated source info",
+        )
+
+    # download data from Shopify
+    headers = {
+        "X-Shopify-Access-Token": source.pat,
+        "Content-Type": "application/json",
+    }
+
+    response = requests.get(
+        f"{source.store_url}/admin/api/2024-01/products.json", headers=headers
+    )
+
+    products_json = response.json()
+
+    dataset_df = shopify_json_to_dataframe(products_json)
+
+    with tempfile.TemporaryDirectory() as temp_dir:
+        real_path = Path(temp_dir) / "real"
+        real_path.mkdir(parents=True, exist_ok=True)
+        real_dataset_path = real_path / f"shopify.csv"
+        real_dataset_path.write_text(dataset_df.to_csv())
+        logger.debug(f"Uploaded dataset temporarily saved to: {real_dataset_path}")
+
+        dataset = datasite_client.dataset.update(DatasetUpdate(uid=data.uid))
+        logger.debug(f"Dataset synced: {dataset}")
 
 
 @v1_router.put(
