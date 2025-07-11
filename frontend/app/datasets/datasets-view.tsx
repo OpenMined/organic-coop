@@ -25,7 +25,7 @@ export function DatasetsView() {
 
   const handleActionsSheetClose = () => {
     setActionsSheetOpen(false)
-    setSelectedDataset(null)
+    setTimeout(() => setSelectedDataset(null), 200)
   }
 
   return (
@@ -48,13 +48,13 @@ export function DatasetsView() {
           {data.datasets.length === 0 ? (
             <div className="mx-auto flex h-96 max-w-md flex-col items-center justify-center">
               <Database
-                className="mb-6 size-16 text-muted-foreground"
+                className="text-muted-foreground mb-6 size-16"
                 strokeWidth={1.5}
               />
-              <h3 className="text-lg font-medium text-foreground">
+              <h3 className="text-foreground text-lg font-medium">
                 No datasets found
               </h3>
-              <p className="mb-6 text-muted-foreground">
+              <p className="text-muted-foreground mb-6">
                 Add a new dataset to get started
               </p>
             </div>
@@ -90,8 +90,8 @@ function DatasetLoadingSkeleton() {
           <CardContent className="flex justify-between p-6">
             <div className="flex w-2/3 flex-col justify-between gap-1">
               <div className="space-y-2">
-                <Skeleton className="h-6 w-1/3 rounded bg-muted"></Skeleton>
-                <Skeleton className="h-4 w-2/3 rounded bg-muted"></Skeleton>
+                <Skeleton className="bg-muted h-6 w-1/3 rounded"></Skeleton>
+                <Skeleton className="bg-muted h-4 w-2/3 rounded"></Skeleton>
               </div>
               <div className="flex h-4 gap-2">
                 <Skeleton className="h-full w-20"></Skeleton>
@@ -100,7 +100,7 @@ function DatasetLoadingSkeleton() {
                 <Skeleton className="h-full w-20"></Skeleton>
               </div>
             </div>
-            <Skeleton className="h-24 w-64 rounded bg-muted" />
+            <Skeleton className="bg-muted h-24 w-64 rounded" />
           </CardContent>
         </Card>
       ))}

@@ -28,6 +28,7 @@ import { AlertTriangle, Download, Edit, Trash2 } from "lucide-react"
 import { apiService } from "@/lib/api/api"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Dataset } from "@/lib/api/types"
+import { Separator } from "@/components/ui/separator"
 
 interface DatasetActionsSheetProps {
   dataset: Dataset | null
@@ -43,7 +44,6 @@ export function DatasetActionsSheet({
   onOpenChange,
 }: DatasetActionsSheetProps) {
   const { toast } = useToast()
-  const [currentAction, setCurrentAction] = useState<Action>("view")
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -100,18 +100,14 @@ export function DatasetActionsSheet({
     }
   }
 
-  const handleSheetOpenChange = (newOpen: boolean) => {
-    onOpenChange(newOpen)
-  }
-
   if (!dataset) return null
 
   return (
     <>
-      <Sheet open={open} onOpenChange={handleSheetOpenChange}>
-        <SheetContent>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent className="-mr-3">
           <SheetHeader>
-            <SheetTitle>{dataset.name}</SheetTitle>
+            <SheetTitle className="text-2xl">{dataset.name}</SheetTitle>
             <SheetDescription>{dataset.description}</SheetDescription>
           </SheetHeader>
           <div className="flex-1">
@@ -178,7 +174,7 @@ export function DatasetActionsSheet({
                     className="w-full"
                     chartHeightPx={128}
                   />
-                  <div className="text-muted-foreground mt-4 flex items-center justify-between border-t pt-4 text-xs">
+                  <div className="text-muted-foreground mt-4 flex items-center justify-between text-xs">
                     <div>Total Requests: 1</div>
                     <div>Avg: 0/week</div>
                   </div>
@@ -186,41 +182,41 @@ export function DatasetActionsSheet({
               </Card>
 
               {/* Actions */}
-              <div className="space-y-2">
-                <h3 className="text-sm font-medium">Actions</h3>
-                <div className="space-y-2">
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start"
-                    onClick={handleDownloadDataset}
-                    disabled={isLoading}
-                  >
-                    <Download className="mr-2 h-4 w-4" />
-                    Download Dataset
-                  </Button>
-                  <Button variant="outline" className="w-full justify-start">
-                    <Edit className="mr-2 h-4 w-4" />
-                    Update Dataset
-                  </Button>
-                  <Button
-                    variant="outline"
-                    className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
-                    onClick={() => setIsDeleteDialogOpen(true)}
-                    disabled={isLoading}
-                  >
-                    <Trash2 className="mr-2 h-4 w-4" />
-                    Delete Dataset
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
           <SheetFooter>
+            <div className="space-y-2">
+              <h3 className="text-sm font-medium">Actions</h3>
+              <div className="space-y-2">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={handleDownloadDataset}
+                  disabled={isLoading}
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download Dataset
+                </Button>
+                <Button variant="outline" className="w-full justify-start">
+                  <Edit className="mr-2 h-4 w-4" />
+                  Update Dataset
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
+                  onClick={() => setIsDeleteDialogOpen(true)}
+                  disabled={isLoading}
+                >
+                  <Trash2 className="mr-2 h-4 w-4" />
+                  Delete Dataset
+                </Button>
+              </div>
+            </div>
+            <Separator className="my-2" />
             <Button
               variant="outline"
               onClick={() => onOpenChange(false)}
               className="w-full"
-              autoFocus={true}
             >
               Close
             </Button>
