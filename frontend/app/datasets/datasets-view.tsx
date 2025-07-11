@@ -25,7 +25,7 @@ export function DatasetsView() {
 
   const handleActionsSheetClose = () => {
     setActionsSheetOpen(false)
-    setTimeout(() => setSelectedDataset(null), 200)
+    setTimeout(() => setSelectedDataset(null), 350)
   }
 
   return (
