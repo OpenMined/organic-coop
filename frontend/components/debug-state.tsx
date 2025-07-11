@@ -124,7 +124,7 @@ export function DebugPanel() {
           onClick={resetAll}
           variant="outline"
           size="sm"
-          className="w-full rounded-full px-6"
+          className="rounded-full px-6"
         >
           Reset All
         </Button>
