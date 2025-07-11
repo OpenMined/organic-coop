@@ -36,7 +36,7 @@ export default function Providers({ children }: { children: ReactNode }) {
   const queryClient = getQueryClient()
 
   return (
-    <StateDebuggerProvider show>
+    <StateDebuggerProvider show={false}>
       <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
         <DragDropProvider>
           <QueryClientProvider client={queryClient}>

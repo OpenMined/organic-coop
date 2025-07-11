@@ -1,9 +1,11 @@
 import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import "./globals.css"
-import { Layout } from "../components/layout"
 import { Toaster } from "@/components/ui/toaster"
 import Providers from "./providers"
+import { cn } from "@/lib/utils"
+import { Navigation } from "./components/navigation"
+import { Header } from "./components/header"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -19,12 +21,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <body className={inter.className}>
-        <Providers>
-          <Layout>{children}</Layout>
+      <Providers>
+        <body className={cn(inter.className, "bg-background min-h-screen")}>
+          {/* <Header /> */}
+          <div className="container mx-auto px-4 py-8">
+            <Navigation />
+          </div>
+          <main className="container mx-auto px-4 py-8">{children}</main>
           <Toaster />
-        </Providers>
-      </body>
+        </body>
+      </Providers>
     </html>
   )
 }
