@@ -21,16 +21,16 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
-      <Providers>
-        <body className={cn(inter.className, "bg-background min-h-screen")}>
+      <body className={cn(inter.className, "bg-background min-h-screen")}>
+        <Providers>
           {/* <Header /> */}
           <div className="container mx-auto px-4 py-8">
             <Navigation />
           </div>
           <main className="container mx-auto px-4 py-8">{children}</main>
           <Toaster />
-        </body>
-      </Providers>
+        </Providers>
+      </body>
     </html>
   )
 }
