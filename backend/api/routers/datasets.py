@@ -1,3 +1,4 @@
+import traceback
 from typing import Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
@@ -73,13 +74,20 @@ async def dataset_import_from_shopify(
     client: Client = Depends(get_client),
 ) -> DatasetModel:
     """Create a dataset by importing data from a Shopify store."""
-    shopify_service = ShopifyService(client)
-    return await shopify_service.create_dataset_from_shopify(
-        url=str(data.url),
-        name=data.name,
-        pat=data.pat,
-        description=data.description,
-    )
+    try:
+        shopify_service = ShopifyService(client)
+        return await shopify_service.create_dataset_from_shopify(
+            url=str(data.url),
+            name=data.name,
+            pat=data.pat,
+            description=data.description,
+        )
+    except HTTPException:
+        raise
+    except Exception as e:
+        tb_str = traceback.format_exc()
+        logger.error(f"Error creating Shopify dataset: {e}\n{tb_str}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 class SyncShopifyRequestBody(BaseModel):

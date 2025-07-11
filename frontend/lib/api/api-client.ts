@@ -1,3 +1,5 @@
+import { parseErrorResponse } from "./errors"
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || ""
 
 class ApiClient {
@@ -17,12 +19,11 @@ class ApiClient {
 
     const response = await fetch(url, config)
 
-    if (!response.ok) {
-      console.error(await response.text())
-      throw new Error(`API Error: ${response.statusText}`)
+    if (response.ok) {
+      return response.json()
     }
 
-    return response.json()
+    throw await parseErrorResponse(response)
   }
 
   get<T>(endpoint: string): Promise<T> {

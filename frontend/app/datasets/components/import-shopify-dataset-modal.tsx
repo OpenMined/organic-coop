@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, CableIcon, FileDownIcon } from "lucide-react"
+import { Loader2, CableIcon, FileDownIcon, AsteriskIcon } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { AddShopifyDatasetFormSchema, datasetsApi } from "@/lib/api/datasets"
@@ -27,6 +27,7 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form"
+import { ApiError, FormFieldError } from "@/lib/api/errors"
 
 interface ImportShopifyDatasetModalProps {
   open: boolean
@@ -51,10 +52,21 @@ export function ImportShopifyDatasetModal({
     },
   })
 
+  const { setError } = form
+
   const addShopifyDatasetMutation = useMutation({
     mutationFn: datasetsApi.addShopifyDataset,
     onError: (error) => {
-      console.error(error)
+      if (error instanceof FormFieldError) {
+        //@ts-ignore: <- NOTE: maybe remove this in the future
+        setError(error.loc, { message: error.message })
+      }
+      if (error instanceof ApiError) {
+        toast({
+          title: "Error",
+          description: error.message,
+        })
+      }
     },
     onSuccess: () => {
       onOpenChange(false)
@@ -77,25 +89,28 @@ export function ImportShopifyDatasetModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Link data from your Shopify store</DialogTitle>
+          <DialogTitle>Import data from your Shopify store</DialogTitle>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form
+            onSubmit={form.handleSubmit(onSubmit)}
+            className="flex flex-col gap-5"
+          >
             <FormField
-              control={form.control}
               name="name"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Dataset Name *</FormLabel>
+                  <div className="relative w-full">
+                    <FormLabel>Dataset Name *</FormLabel>
+                    <FormMessage className="absolute top-1 right-0" />
+                  </div>
                   <FormControl>
                     <Input placeholder="shopify_data" {...field} />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
-              control={form.control}
               name="description"
               render={({ field }) => (
                 <FormItem>
@@ -103,33 +118,34 @@ export function ImportShopifyDatasetModal({
                   <FormControl>
                     <Input placeholder="Data from ..." {...field} />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
-              control={form.control}
               name="url"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Shopify Store URL *</FormLabel>
+                  <div className="relative w-full">
+                    <FormLabel>Shopify Store URL *</FormLabel>
+                    <FormMessage className="absolute top-1 right-0" />
+                  </div>
                   <FormControl>
                     <Input placeholder="https://your-store.com" {...field} />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />
             <FormField
-              control={form.control}
               name="pat"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Access Token</FormLabel>
+                  <div className="relative w-full">
+                    <FormLabel>Access Token *</FormLabel>
+                    <FormMessage className="absolute top-1 right-0" />
+                  </div>
                   <FormControl>
                     <Input placeholder="shpat_123..." {...field} />
                   </FormControl>
-                  <FormMessage />
                 </FormItem>
               )}
             />

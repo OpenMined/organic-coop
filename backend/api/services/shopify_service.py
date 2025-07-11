@@ -27,56 +27,56 @@ class ShopifyService:
         self, url: str, name: str, pat: str, description: Optional[str] = None
     ) -> DatasetModel:
         """Create a dataset by importing data from Shopify."""
-        try:
-            # Download data from Shopify
-            products_json = await self._fetch_shopify_products(url, pat)
-            dataset_df = shopify_json_to_dataframe(products_json)
 
-            with tempfile.TemporaryDirectory() as temp_dir:
-                # Save real dataset
-                real_path = Path(temp_dir) / "real"
-                real_path.mkdir(parents=True, exist_ok=True)
-                real_dataset_path = real_path / "shopify.csv"
-                real_dataset_path.write_text(dataset_df.to_csv())
-                logger.debug(
-                    f"Shopify dataset temporarily saved to: {real_dataset_path}"
+        for dataset in self.datasite_client.datasets:
+            if dataset.name == name:
+                raise HTTPException(
+                    status_code=409,
+                    detail={
+                        "type": "FormFieldError",
+                        "loc": "name",
+                        "message": "A dataset with this name already exists",
+                    },
                 )
 
-                # Create mock dataset
-                mock_path = Path(temp_dir) / "mock"
-                mock_path.mkdir(parents=True, exist_ok=True)
-                mock_dataset_path = mock_path / "shopify.csv"
-                await self._download_mock_dataset(mock_dataset_path)
+        # Download data from Shopify
+        products_json = await self._fetch_shopify_products(url, pat)
+        dataset_df = shopify_json_to_dataframe(products_json)
 
-                # Create dummy description file
-                dummy_description_path = Path(temp_dir) / "dummy_description.txt"
-                dummy_description_path.touch()
+        with tempfile.TemporaryDirectory() as temp_dir:
+            # Save real dataset
+            real_path = Path(temp_dir) / "real"
+            real_path.mkdir(parents=True, exist_ok=True)
+            real_dataset_path = real_path / "shopify.csv"
+            real_dataset_path.write_text(dataset_df.to_csv())
+            logger.debug(f"Shopify dataset temporarily saved to: {real_dataset_path}")
 
-                # Create dataset
-                dataset = self.datasite_client.dataset.create(
-                    name=name,
-                    summary=description or f"Shopify data from {url}",
-                    path=real_path,
-                    mock_path=mock_path,
-                    description_path=dummy_description_path,
-                    auto_approval=get_auto_approve_list(self.client),
-                )
+            # Create mock dataset
+            mock_path = Path(temp_dir) / "mock"
+            mock_path.mkdir(parents=True, exist_ok=True)
+            mock_dataset_path = mock_path / "shopify.csv"
+            await self._download_mock_dataset(mock_dataset_path)
 
-                logger.debug(f"Shopify dataset created: {dataset}")
+            # Create dummy description file
+            dummy_description_path = Path(temp_dir) / "dummy_description.txt"
+            dummy_description_path.touch()
 
-                # Store Shopify source information
-                add_dataset_source(
-                    str(dataset.uid), ShopifySource(store_url=url, pat=pat)
-                )
+            # Create dataset
+            dataset = self.datasite_client.dataset.create(
+                name=name,
+                summary=description or f"Shopify data from {url}",
+                path=real_path,
+                mock_path=mock_path,
+                description_path=dummy_description_path,
+                auto_approval=get_auto_approve_list(self.client),
+            )
 
-                return DatasetModel.model_validate(dataset)
+            logger.debug(f"Shopify dataset created: {dataset}")
 
-        except HTTPException:
-            raise
-        except Exception as e:
-            tb_str = traceback.format_exc()
-            logger.error(f"Error creating Shopify dataset: {e}\n{tb_str}")
-            raise HTTPException(status_code=500, detail=str(e))
+            # Store Shopify source information
+            add_dataset_source(str(dataset.uid), ShopifySource(store_url=url, pat=pat))
+
+            return DatasetModel.model_validate(dataset)
 
     async def sync_dataset(self, dataset_uid: str) -> dict:
         """Sync a dataset with its Shopify source."""

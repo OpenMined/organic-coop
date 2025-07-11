@@ -75,8 +75,8 @@ export function StateDebuggerProvider({
 
   return (
     <DebugStateContext.Provider value={value}>
-      {show ? <DebugPanel /> : null}
       {children}
+      {show ? <DebugPanel /> : null}
     </DebugStateContext.Provider>
   )
 }

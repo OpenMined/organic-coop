@@ -5,23 +5,31 @@ import { formatBytes } from "../utils"
 import { apiService, type Job } from "./api"
 
 export const AddShopifyDatasetFormSchema = z.object({
-  name: z.string().min(1, { message: "Dataset name is required" }),
-  url: z
-    .string()
-    .min(1, { message: "Store URL is required" })
-    .url({ message: "Not a valid URL" })
-    .refine(
-      (url) => {
-        try {
-          const urlObj = new URL(url)
-          return urlObj.protocol === "https:" || urlObj.protocol === "http:"
-        } catch {
-          return false
-        }
+  name: z.string().min(1, { message: "A dataset name is required" }),
+  url: z.string().pipe(
+    z.preprocess(
+      (val) => {
+        if (val === "") return val
+        if (!val.startsWith("https://") && !val.startsWith("http://"))
+          return "https://" + val
+        return val
       },
-      { message: "URL must start with http:// or https://" },
+      z.url({
+        protocol: /^(https?)?$/,
+        hostname: z.regexes.domain,
+        error: (iss) => {
+          console.debug(iss)
+          return iss.input === "" ? "The store URL is required" : undefined
+        },
+      }),
     ),
-  pat: z.string().min(1, { message: "Access Token is required" }),
+  ),
+  pat: z
+    .string()
+    .min(1, { message: "The access token is required" })
+    .regex(/^shpat_[0-9a-f]{32}$/, {
+      error: () => "Invalid access token format",
+    }),
   description: z.string().optional(),
 })
 

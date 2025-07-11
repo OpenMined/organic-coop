@@ -105,7 +105,7 @@ export function DatasetActionsSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="-mr-3">
+        <SheetContent className="-mr-1">
           <SheetHeader>
             <SheetTitle className="text-2xl">{dataset.name}</SheetTitle>
             <SheetDescription>{dataset.description}</SheetDescription>
