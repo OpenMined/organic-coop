@@ -14,7 +14,7 @@ export function Navigation() {
   const pathname = usePathname()
   return (
     <NavigationMenu>
-      <NavigationMenuList className="bg-accent/10 border-border/60 rounded-lg border p-0.5">
+      <NavigationMenuList className="bg-accent/10 border-border/50 rounded-lg border p-0.5 shadow-2xs">
         <NavigationMenuItem>
           <NavigationMenuLink
             active={pathname === "/datasets"}

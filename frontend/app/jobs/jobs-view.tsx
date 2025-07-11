@@ -58,13 +58,13 @@ function JobsSection() {
       {data?.jobs.length === 0 ? (
         <div className="py-12 text-center">
           <div className="mx-auto max-w-md">
-            <div className="mx-auto mb-4 h-12 w-12 text-muted-foreground">
+            <div className="text-muted-foreground mx-auto mb-4 h-12 w-12">
               <Briefcase className="h-12 w-12" />
             </div>
-            <h3 className="mb-2 text-lg font-medium text-foreground">
+            <h3 className="text-foreground mb-2 text-lg font-medium">
               No jobs found
             </h3>
-            <p className="mb-6 text-muted-foreground">
+            <p className="text-muted-foreground mb-6">
               Jobs will appear here when researchers request access to your
               datasets
             </p>
@@ -100,10 +100,10 @@ function JobsSection() {
                     </CardHeader>
                     <CardContent>
                       <div className="flex items-end justify-between">
-                        <p className="text-sm text-muted-foreground">
+                        <p className="text-muted-foreground text-sm">
                           Requested {timeAgo(job.requestedTime.toISOString())}{" "}
                           by{" "}
-                          <strong className="tracking-wide brightness-125">
+                          <strong className="text-foreground/70 font-semibold tracking-wide">
                             {job.requesterEmail}
                           </strong>
                         </p>

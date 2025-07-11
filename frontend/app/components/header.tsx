@@ -2,7 +2,6 @@ import { ModeToggle } from "@/components/mode-toggle"
 import { OpenMinedLogo } from "@/components/svg/openmined-logo"
 import { OrganicCoopLogo } from "@/components/svg/organic-coop-logo"
 import { XIcon } from "lucide-react"
-import { Navigation } from "./navigation"
 
 export function Header() {
   return (
@@ -22,7 +21,9 @@ export function Header() {
               </span>
             </div>
           </div>
-          <div className="flex items-center gap-4">{/* <ModeToggle /> */}</div>
+          <div className="flex items-center gap-4">
+            <ModeToggle />
+          </div>
         </div>
       </div>
     </header>
