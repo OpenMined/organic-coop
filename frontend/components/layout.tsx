@@ -5,6 +5,14 @@ import { usePathname } from "next/navigation"
 import { ModeToggle } from "@/components/mode-toggle"
 import { Button } from "@/components/ui/button"
 import { Database, Briefcase } from "lucide-react"
+import {
+  NavigationMenu,
+  NavigationMenuContent,
+  NavigationMenuItem,
+  NavigationMenuLink,
+  NavigationMenuList,
+  NavigationMenuTrigger,
+} from "./ui/navigation-menu"
 
 interface LayoutProps {
   children: React.ReactNode
@@ -151,7 +159,7 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
       )}
 
       {/* Navigation */}
-      <nav className="animate-fade-in container mx-auto px-4 py-8">
+      <nav className="animate-fade-in debug container mx-auto px-4 py-8">
         <div className="bg-muted flex w-fit space-x-1 rounded-lg p-1">
           <Link href="/datasets">
             <Button
@@ -176,8 +184,34 @@ export function Layout({ children, showHeader = false }: LayoutProps) {
         </div>
       </nav>
 
+      <Navigation />
+
       {/* Main Content */}
       <main className="container mx-auto px-4 py-8">{children}</main>
     </div>
+  )
+}
+
+function Navigation() {
+  const pathname = usePathname()
+  return (
+    <NavigationMenu className="debug">
+      <NavigationMenuList>
+        <NavigationMenuItem>
+          <NavigationMenuLink asChild active={pathname === "/datasets"}>
+            <Link href="/datasets">
+              <Database className="h-4 w-4" />
+              <span>Datasets</span>
+            </Link>
+          </NavigationMenuLink>
+        </NavigationMenuItem>
+        <NavigationMenuLink asChild active={pathname === "/jobs"}>
+          <Link href="/jobs">
+            <Briefcase className="h-4 w-4" />
+            <span>Jobs</span>
+          </Link>
+        </NavigationMenuLink>
+      </NavigationMenuList>
+    </NavigationMenu>
   )
 }
