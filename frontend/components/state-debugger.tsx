@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Switch } from "@/components/ui/switch"
 import { Label } from "@/components/ui/label"
+import { Portal } from "@radix-ui/react-portal"
 
 interface DebugState {
   debugPending: boolean
@@ -75,8 +76,8 @@ export function StateDebuggerProvider({
 
   return (
     <DebugStateContext.Provider value={value}>
-      {children}
       {show ? <DebugPanel /> : null}
+      {children}
     </DebugStateContext.Provider>
   )
 }
@@ -106,29 +107,45 @@ export function DebugPanel() {
   }
 
   return (
-    <div className="bg-background/50 fixed top-4 right-4 z-50 rounded-full backdrop-blur-xs">
-      <Card className="flex items-center gap-8 rounded-full bg-transparent p-4 px-6 opacity-60 shadow-lg">
-        <div className="flex items-center gap-2">
-          <Switch checked={debugPending} onCheckedChange={setDebugPending} />
-          <Label className="whitespace-nowrap">Pending</Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch checked={debugError} onCheckedChange={setDebugError} />
-          <Label className="whitespace-nowrap">Error</Label>
-        </div>
-        <div className="flex items-center gap-2">
-          <Switch checked={debugState} onCheckedChange={setDebugState} />
-          <Label className="whitespace-nowrap">State</Label>
-        </div>
-        <Button
-          onClick={resetAll}
-          variant="outline"
-          size="sm"
-          className="rounded-full px-6"
-        >
-          Reset All
-        </Button>
-      </Card>
-    </div>
+    <Portal asChild>
+      <div
+        data-debug-panel
+        className="bg-background/50 fixed top-4 right-4 z-1000 rounded-full backdrop-blur-xs"
+        onPointerDown={(e) => e.stopPropagation()}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <Card className="flex items-center gap-8 rounded-full bg-transparent p-4 px-6 opacity-60 shadow-lg">
+          <div className="flex items-center gap-2">
+            <Label className="whitespace-nowrap">
+              <Switch
+                checked={debugPending}
+                onCheckedChange={setDebugPending}
+              />
+              Pending
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="whitespace-nowrap">
+              <Switch checked={debugError} onCheckedChange={setDebugError} />
+              Error
+            </Label>
+          </div>
+          <div className="flex items-center gap-2">
+            <Label className="whitespace-nowrap">
+              <Switch checked={debugState} onCheckedChange={setDebugState} />
+              State
+            </Label>
+          </div>
+          <Button
+            onClick={resetAll}
+            variant="outline"
+            size="sm"
+            className="rounded-full px-6"
+          >
+            Reset All
+          </Button>
+        </Card>
+      </div>
+    </Portal>
   )
 }
