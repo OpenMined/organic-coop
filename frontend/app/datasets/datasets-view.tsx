@@ -10,7 +10,6 @@ import { Database } from "lucide-react"
 import { useState } from "react"
 import { DatasetCard } from "./components/dataset-card"
 import { AddDatasetAction } from "./components/add-datasets-action"
-import { useDebugState } from "@/components/debug-state"
 
 export function DatasetsView() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null)

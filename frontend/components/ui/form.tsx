@@ -99,7 +99,7 @@ function FormLabel({
     <Label
       data-slot="form-label"
       data-error={!!error}
-      className={cn("data-[error=true]:text-destructive transition", className)}
+      className={cn("transition data-[error=true]:text-red-500", className)}
       htmlFor={formItemId}
       {...props}
     />
@@ -153,7 +153,7 @@ function FormMessage({
     <p
       data-slot="form-message"
       id={formMessageId}
-      className={cn("text-destructive text-xs leading-1", className)}
+      className={cn("text-xs leading-1 text-red-500", className)}
       {...props}
     >
       {icon === false

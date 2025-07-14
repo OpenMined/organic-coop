@@ -1,6 +1,6 @@
 "use client"
 
-import { StateDebuggerProvider } from "@/components/debug-state"
+import { StateDebuggerProvider } from "@/components/state-debugger"
 import { DragDropProvider } from "@/components/drag-drop-context"
 import { TooltipProvider } from "@/components/ui/tooltip"
 import {
