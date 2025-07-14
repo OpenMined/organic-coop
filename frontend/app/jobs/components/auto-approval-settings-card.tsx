@@ -143,11 +143,11 @@ export function AutoApprovalSettingsCard() {
               )}
             />
 
-            <Button size="icon" disabled={isPending} className="shrink-0">
+            <Button disabled={isPending} className="size-10 shrink-0">
               {addEmailMutation.isPending ? (
                 <Loader2 className="h-4 w-4 animate-spin" />
               ) : (
-                <Plus />
+                <Plus className="size-5" />
               )}
             </Button>
           </form>
@@ -167,7 +167,7 @@ export function AutoApprovalSettingsCard() {
                     autoApprovedEmails: data.datasites,
                   })
                 }
-                className="ml-1 hover:text-destructive"
+                className="hover:text-destructive ml-1"
                 disabled={isPending}
               >
                 <X className="h-3 w-3" />
