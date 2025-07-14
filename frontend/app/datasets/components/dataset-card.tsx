@@ -63,7 +63,7 @@ export function DatasetCard({
                     <TooltipTrigger asChild>
                       <Badge
                         variant="outline"
-                        className="cursor-default gap-2 transition-colors hover:bg-muted dark:hover:bg-muted"
+                        className="hover:bg-muted dark:hover:bg-muted cursor-default gap-2 transition-colors"
                       >
                         <FaShopify size={14} /> Shopify
                       </Badge>
@@ -73,7 +73,7 @@ export function DatasetCard({
                 ) : null}
               </div>
             </div>
-            <CardDescription className="text-sm text-muted-foreground">
+            <CardDescription className="text-muted-foreground text-sm">
               {dataset.description}
             </CardDescription>
           </div>
@@ -155,7 +155,7 @@ export function DatasetCard({
             </div>
           ) : null}
         </div>
-        <div className="mr-2 flex flex-col">
+        <div className="mr-2 flex flex-col justify-end">
           {dataset.source?.type === "shopify" ? (
             <SyncShopifyDatasetAction dataset={dataset} />
           ) : null}
