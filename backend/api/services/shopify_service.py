@@ -28,6 +28,7 @@ class ShopifyService:
     ) -> DatasetModel:
         """Create a dataset by importing data from Shopify."""
 
+        # check if dataset name already exists
         for dataset in self.datasite_client.datasets:
             if dataset.name == name:
                 raise HTTPException(
