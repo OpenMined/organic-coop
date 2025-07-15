@@ -2,7 +2,6 @@
 
 import type React from "react"
 import { z } from "zod"
-import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
@@ -14,8 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Alert, AlertDescription } from "@/components/ui/alert"
-import { Loader2, CableIcon, FileDownIcon, AsteriskIcon } from "lucide-react"
+import { Loader2, FileDownIcon } from "lucide-react"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { useForm } from "react-hook-form"
 import { AddShopifyDatasetFormSchema, datasetsApi } from "@/lib/api/datasets"
