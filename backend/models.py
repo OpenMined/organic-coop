@@ -1,5 +1,5 @@
 # Standard library imports
-from typing import List
+from typing import List, Literal, Union
 
 # Third-party imports
 from pydantic import BaseModel, ConfigDict, Field
@@ -7,6 +7,8 @@ from pydantic.alias_generators import to_camel
 
 # Local imports
 from syft_rds.models.models import Dataset as SyftDataset, Job as SyftJob
+
+from .sources import ShopifySource
 
 
 class BaseSchema(BaseModel):
@@ -20,6 +22,7 @@ class BaseSchema(BaseModel):
 class Dataset(BaseSchema, SyftDataset):
     private_size: str = Field(default="0 B")
     mock_size: str = Field(default="0 B")
+    source: Union[None, ShopifySource] = Field(default=None)
 
 
 class Job(BaseSchema, SyftJob):

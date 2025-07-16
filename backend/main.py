@@ -7,6 +7,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
+from backend.lib.html_static_files import HTMLStaticFiles
+
 # Local imports
 from .api import api_router
 from .config import get_settings
@@ -28,6 +30,7 @@ app = FastAPI(
     },
 )
 if get_settings().debug:
+    print("SHOULD HAVE MIDDLEWARE")
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000"],
@@ -37,4 +40,4 @@ if get_settings().debug:
     )
 
 app.include_router(api_router)
-app.mount("/", StaticFiles(directory="frontend/out", html=True, check_dir=False))
+app.mount("/", HTMLStaticFiles(directory="frontend/out", html=True, check_dir=False))
