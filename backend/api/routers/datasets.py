@@ -9,6 +9,8 @@ from syft_core import Client as SyftBoxClient
 from syft_rds.models.models import DatasetUpdate
 from syft_rds.client.exceptions import DatasetExistsError
 
+from backend.dev import debug_delay
+
 from ..dependencies import get_syftbox_client
 from ..services.dataset_service import DatasetService
 from ..services.shopify_service import ShopifyService
@@ -56,7 +58,7 @@ async def dataset_create_from_file(
     return await service.create_dataset(dataset, name, description)
 
 
-class AddShopifyRequestBody(BaseModel):
+class ImportShopifyRequestBody(BaseModel):
     """Request body for adding a dataset from Shopify."""
 
     url: HttpUrl
@@ -72,7 +74,7 @@ class AddShopifyRequestBody(BaseModel):
     response_model=DatasetModel,
 )
 async def dataset_import_from_shopify(
-    data: AddShopifyRequestBody,
+    data: ImportShopifyRequestBody,
     syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ) -> DatasetModel:
     """Create a dataset by importing data from a Shopify store."""
@@ -92,8 +94,8 @@ async def dataset_import_from_shopify(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@router.post(
-    "/sync-shopify/{dataset_uid}",
+@router.put(
+    "/sync-shopify-dataset/{dataset_uid}",
     summary="Sync a dataset imported from Shopify",
 )
 async def dataset_sync_shopify(
@@ -101,6 +103,8 @@ async def dataset_sync_shopify(
     syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ):
     """Sync an existing dataset with its Shopify source."""
+    # await debug_delay(2.5)
+    # return
     shopify_service = ShopifyService(syftbox_client)
     return await shopify_service.sync_dataset(dataset_uid)
 
@@ -165,3 +169,13 @@ async def download_dataset_private(
     """Download the private file of a dataset."""
     service = DatasetService(syftbox_client)
     return await service.download_private_file(dataset_uuid)
+
+
+@router.get("/open-local-directory/{dataset_uid}")
+async def open_local_directory(
+    dataset_uid: str,
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
+):
+    service = DatasetService(syftbox_client)
+    await service.open_local_directory(dataset_uid)
+    return {"message": f"Opened local directory for dataset {dataset_uid}"}

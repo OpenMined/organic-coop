@@ -20,8 +20,8 @@ class BaseSchema(BaseModel):
 
 
 class Dataset(BaseSchema, SyftDataset):
-    private_size: str = Field(default="0 B")
-    mock_size: str = Field(default="0 B")
+    private_size: int = Field(default=0)
+    mock_size: int = Field(default=0)
     source: Union[None, ShopifySource] = Field(default=None)
 
 

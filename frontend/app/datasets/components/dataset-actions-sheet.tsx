@@ -27,9 +27,15 @@ import { useToast } from "@/hooks/use-toast"
 import { apiService } from "@/lib/api/api"
 import type { Dataset } from "@/lib/api/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
-import { AlertTriangle, Download, Trash2 } from "lucide-react"
+import {
+  AlertTriangle,
+  Download,
+  FolderSymlinkIcon,
+  Trash2,
+} from "lucide-react"
 import { useState } from "react"
 import { UpdateDatasetModal } from "./update-dataset-modal"
+import { datasetsApi } from "@/lib/api/datasets"
 
 interface DatasetActionsSheetProps {
   dataset: Dataset | null
@@ -193,8 +199,16 @@ export function DatasetActionsSheet({
                   onClick={handleDownloadDataset}
                   disabled={isLoading}
                 >
-                  <Download className="mr-2 h-4 w-4" />
+                  <Download className="h-4 w-4" />
                   Download Dataset
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start"
+                  onClick={() => datasetsApi.openLocalDirectory(dataset.uid)}
+                >
+                  <FolderSymlinkIcon />
+                  View Dataset
                 </Button>
                 <UpdateDatasetModal dataset={dataset} />
                 <Button
@@ -203,7 +217,7 @@ export function DatasetActionsSheet({
                   onClick={() => setIsDeleteDialogOpen(true)}
                   disabled={isLoading}
                 >
-                  <Trash2 className="mr-2 h-4 w-4" />
+                  <Trash2 className="h-4 w-4" />
                   Delete Dataset
                 </Button>
               </div>

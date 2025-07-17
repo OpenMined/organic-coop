@@ -80,7 +80,7 @@ class ShopifyService:
             return DatasetModel.model_validate(dataset)
 
     async def sync_dataset(self, dataset_uid: str) -> dict:
-        """Sync a dataset with its Shopify source."""
+        """Sync a Shopify datset with the most recent store data."""
         try:
             source = find_source(dataset_uid)
             if not source or not isinstance(source, ShopifySource):
@@ -103,13 +103,9 @@ class ShopifyService:
 
                 # Update the dataset
 
-                dataset = self.rds_client.dataset.update(
-                    DatasetUpdate(
-                        uid=dataset_uid, name="UPDATED", summary="Update this one!"
-                    ),
+                self.rds_client.dataset.update(
+                    DatasetUpdate(uid=dataset_uid, path=str(real_path)),
                 )
-
-                logger.debug(f"Dataset synced: {dataset}")
 
                 return {"message": f"Dataset {dataset_uid} synced successfully"}
 
