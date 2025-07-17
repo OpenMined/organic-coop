@@ -18,7 +18,6 @@ export const AddShopifyDatasetFormSchema = z.object({
         protocol: /^(https?)?$/,
         hostname: z.regexes.domain,
         error: (iss) => {
-          console.debug(iss)
           return iss.input === "" ? "The store URL is required" : undefined
         },
       }),
@@ -30,6 +29,11 @@ export const AddShopifyDatasetFormSchema = z.object({
     .regex(/^shpat_[0-9a-f]{32}$/, {
       error: () => "Invalid access token format",
     }),
+  description: z.string().optional(),
+})
+
+export const UpdateShopifyDatasetFormSchema = z.object({
+  name: z.string().optional(),
   description: z.string().optional(),
 })
 
@@ -94,6 +98,15 @@ export const datasetsApi = {
   },
   addShopifyDataset: (data: z.infer<typeof AddShopifyDatasetFormSchema>) => {
     return apiClient.post<{}>("/api/v1/datasets/import-from-shopify", data)
+  },
+  updateShopifyDataset: ({
+    uid,
+    data,
+  }: {
+    uid: string
+    data: z.infer<typeof UpdateShopifyDatasetFormSchema>
+  }) => {
+    return apiClient.put<{}>(`/api/v1/datasets/update/${uid}`, data)
   },
   syncShopifyDataset: (uid: string) => {
     return apiClient.post<{}>("/api/v1/datasets/sync-shopify", { uid })
