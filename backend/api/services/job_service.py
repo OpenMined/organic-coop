@@ -2,7 +2,7 @@ import webbrowser
 
 from fastapi import HTTPException
 from loguru import logger
-from syft_core import Client
+from syft_core import Client as SyftBoxClient
 from syft_rds import init_session
 
 from ...models import ListJobsResponse
@@ -11,14 +11,14 @@ from ...models import ListJobsResponse
 class JobService:
     """Service class for job-related operations."""
 
-    def __init__(self, client: Client):
-        self.client = client
-        self.datasite_client = init_session(client.email)
+    def __init__(self, syftbox_client: SyftBoxClient):
+        self.syftbox_client = syftbox_client
+        self.rds_client = init_session(syftbox_client.email)
 
     async def list_jobs(self) -> ListJobsResponse:
         """List all jobs in the system."""
         try:
-            jobs = self.datasite_client.jobs.get_all()
+            jobs = self.rds_client.jobs.get_all()
             return ListJobsResponse(jobs=jobs)
         except Exception as e:
             logger.error(f"Error listing jobs: {e}")
@@ -27,7 +27,7 @@ class JobService:
     async def open_job_code(self, job_uid: str) -> None:
         """Open the job code directory in the file browser."""
         try:
-            job = self.datasite_client.jobs.get(uid=job_uid)
+            job = self.rds_client.jobs.get(uid=job_uid)
             if not job:
                 raise HTTPException(
                     status_code=404, detail=f"Job with UID '{job_uid}' not found"

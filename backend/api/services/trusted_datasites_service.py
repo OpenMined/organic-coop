@@ -5,7 +5,7 @@ from fastapi import HTTPException
 from fastapi.responses import JSONResponse
 from filelock import FileLock
 from loguru import logger
-from syft_core import Client
+from syft_core import Client as SyftBoxClient
 from syft_rds import init_session
 from syft_rds.models.models import DatasetUpdate
 
@@ -20,14 +20,16 @@ from ...utils import (
 class TrustedDatasitesService:
     """Service class for auto-approval operations."""
 
-    def __init__(self, client: Client):
-        self.client = client
-        self.datasite_client = init_session(client.email)
+    def __init__(self, syftbox_client: SyftBoxClient):
+        self.syftbox_client = syftbox_client
+        self.rds_client = init_session(syftbox_client.email)
 
     async def set_auto_approved_datasites(self, datasites: List[str]) -> JSONResponse:
         """Set the list of auto-approved datasites."""
         # Create a lock file for thread safety
-        lock_file_path = get_auto_approve_file_path(self.client).with_suffix(".lock")
+        lock_file_path = get_auto_approve_file_path(self.syftbox_client).with_suffix(
+            ".lock"
+        )
         file_lock = FileLock(str(lock_file_path))
 
         try:
@@ -38,7 +40,7 @@ class TrustedDatasitesService:
                 ]
 
                 # Save the new auto-approve list
-                save_auto_approve_list(self.client, datasites)
+                save_auto_approve_list(self.syftbox_client, datasites)
 
                 # Update all existing datasets with the new auto-approve list
                 await self._update_datasets_auto_approval(datasites)
@@ -58,7 +60,7 @@ class TrustedDatasitesService:
     async def get_auto_approved_datasites(self) -> ListAutoApproveResponse:
         """Get the current list of auto-approved datasites."""
         try:
-            auto_approved_datasites = get_auto_approve_list(self.client)
+            auto_approved_datasites = get_auto_approve_list(self.syftbox_client)
             return ListAutoApproveResponse(datasites=auto_approved_datasites)
         except Exception as e:
             logger.error(f"Error getting auto-approve list: {e}")
@@ -66,11 +68,11 @@ class TrustedDatasitesService:
 
     async def _update_datasets_auto_approval(self, datasites: List[str]) -> None:
         """Update all datasets with new auto-approval list."""
-        datasets = self.datasite_client.dataset.get_all()
+        datasets = self.rds_client.dataset.get_all()
 
         for dataset in datasets:
             try:
-                updated_dataset = self.datasite_client.dataset.update(
+                updated_dataset = self.rds_client.dataset.update(
                     DatasetUpdate(
                         uid=dataset.uid,
                         auto_approval=datasites,
