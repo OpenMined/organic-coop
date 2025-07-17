@@ -7,6 +7,7 @@ from loguru import logger
 from pydantic import BaseModel, Field, HttpUrl
 from syft_core import Client as SyftBoxClient
 from syft_rds.models.models import DatasetUpdate
+from syft_rds.client.exceptions import DatasetExistsError
 
 from ..dependencies import get_syftbox_client
 from ..services.dataset_service import DatasetService
@@ -119,7 +120,22 @@ async def update_dataset(
     syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ):
     service = DatasetService(syftbox_client)
-    return await service.update_dataset(DatasetUpdate(uid=dataset_uid, name=data.name))
+    try:
+        return await service.update_dataset(
+            DatasetUpdate(uid=dataset_uid, name=data.name)
+        )
+    except DatasetExistsError:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "type": "FormFieldError",
+                "loc": "name",
+                "message": "A dataset with this name already exists",
+            },
+        )
+    except Exception as e:
+        logger.error(type(e), e)
+        raise HTTPException(status_code=500, detail=f"Couldn't update the dataset: {e}")
 
 
 @router.delete(
