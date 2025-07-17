@@ -2,7 +2,7 @@
 
 rm -rf .venv
 uv venv -p 3.12
-uv pip install -r requirements.txt
+uv sync
 
 
 # Start the RDS Server in Background

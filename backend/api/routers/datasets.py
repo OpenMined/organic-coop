@@ -5,9 +5,11 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 from pydantic import BaseModel, Field, HttpUrl
-from syft_core import Client
+from syft_core import Client as SyftBoxClient
+from syft_rds.models.models import DatasetUpdate
+from syft_rds.client.exceptions import DatasetExistsError
 
-from ..dependencies import get_client
+from ..dependencies import get_syftbox_client
 from ..services.dataset_service import DatasetService
 from ..services.shopify_service import ShopifyService
 from ...models import ListDatasetsResponse, Dataset as DatasetModel
@@ -23,10 +25,10 @@ router = APIRouter(prefix="/datasets", tags=["datasets"])
     response_model=ListDatasetsResponse,
 )
 async def get_datasets(
-    client: Client = Depends(get_client),
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ) -> ListDatasetsResponse:
     """Get all datasets available in the system."""
-    service = DatasetService(client)
+    service = DatasetService(syftbox_client)
     return await service.list_datasets()
 
 
@@ -47,10 +49,10 @@ async def dataset_create_from_file(
         max_length=350,
         description="Brief description of the dataset",
     ),
-    client: Client = Depends(get_client),
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ) -> DatasetModel:
     """Create a new dataset from an uploaded file."""
-    service = DatasetService(client)
+    service = DatasetService(syftbox_client)
     return await service.create_dataset(dataset, name, description)
 
 
@@ -71,11 +73,11 @@ class AddShopifyRequestBody(BaseModel):
 )
 async def dataset_import_from_shopify(
     data: AddShopifyRequestBody,
-    client: Client = Depends(get_client),
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ) -> DatasetModel:
     """Create a dataset by importing data from a Shopify store."""
     try:
-        shopify_service = ShopifyService(client)
+        shopify_service = ShopifyService(syftbox_client)
         return await shopify_service.create_dataset_from_shopify(
             url=str(data.url),
             name=data.name,
@@ -90,37 +92,51 @@ async def dataset_import_from_shopify(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-class SyncShopifyRequestBody(BaseModel):
-    """Request body for syncing a Shopify dataset."""
-
-    uid: str
-
-
 @router.post(
-    "/sync-shopify",
+    "/sync-shopify/{dataset_uid}",
     summary="Sync a dataset imported from Shopify",
 )
 async def dataset_sync_shopify(
-    data: SyncShopifyRequestBody,
-    client: Client = Depends(get_client),
+    dataset_uid: str,
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ):
     """Sync an existing dataset with its Shopify source."""
-    shopify_service = ShopifyService(client)
-    return await shopify_service.sync_dataset(data.uid)
+    shopify_service = ShopifyService(syftbox_client)
+    return await shopify_service.sync_dataset(dataset_uid)
+
+
+class UpdateDatasetRequestBody(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 @router.put(
-    "/{dataset_name}",
+    "/update/{dataset_uid}",
     summary="Update a dataset",
     description="Update an existing dataset by its name",
 )
 async def update_dataset(
-    dataset_name: str,
-    client: Client = Depends(get_client),
+    dataset_uid: str,
+    data: UpdateDatasetRequestBody,
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ):
-    """Update dataset endpoint - to be implemented."""
-    # TODO: Implement update logic
-    raise HTTPException(status_code=501, detail="Not implemented")
+    service = DatasetService(syftbox_client)
+    try:
+        return await service.update_dataset(
+            DatasetUpdate(uid=dataset_uid, name=data.name, summary=data.description)
+        )
+    except DatasetExistsError:
+        raise HTTPException(
+            status_code=409,
+            detail={
+                "type": "FormFieldError",
+                "loc": "name",
+                "message": "A dataset with this name already exists",
+            },
+        )
+    except Exception as e:
+        logger.error(type(e), e)
+        raise HTTPException(status_code=500, detail=f"Couldn't update the dataset: {e}")
 
 
 @router.delete(
@@ -130,10 +146,10 @@ async def update_dataset(
 )
 async def delete_dataset(
     dataset_name: str,
-    client: Client = Depends(get_client),
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ) -> JSONResponse:
     """Delete a dataset by name."""
-    service = DatasetService(client)
+    service = DatasetService(syftbox_client)
     return await service.delete_dataset(dataset_name)
 
 
@@ -144,8 +160,8 @@ async def delete_dataset(
 )
 async def download_dataset_private(
     dataset_uuid: str,
-    client: Client = Depends(get_client),
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ) -> StreamingResponse:
     """Download the private file of a dataset."""
-    service = DatasetService(client)
+    service = DatasetService(syftbox_client)
     return await service.download_private_file(dataset_uuid)

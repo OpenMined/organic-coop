@@ -26,6 +26,7 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { ApiError, FormFieldError } from "@/lib/api/errors"
+import { Textarea } from "@/components/ui/textarea"
 
 interface ImportShopifyDatasetModalProps {
   open: boolean
@@ -114,7 +115,7 @@ export function ImportShopifyDatasetModal({
                 <FormItem>
                   <FormLabel>Description (optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="Data from ..." {...field} />
+                    <Textarea placeholder="Data from ..." {...field} />
                   </FormControl>
                 </FormItem>
               )}

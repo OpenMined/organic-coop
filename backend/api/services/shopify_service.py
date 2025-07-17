@@ -6,7 +6,7 @@ from typing import Optional
 from fastapi import HTTPException
 from loguru import logger
 import requests
-from syft_core import Client
+from syft_core import Client as SyftBoxClient
 from syft_rds import init_session
 from syft_rds.models.models import DatasetUpdate
 
@@ -19,9 +19,9 @@ from ...utils import get_auto_approve_list
 class ShopifyService:
     """Service class for Shopify-related operations."""
 
-    def __init__(self, client: Client):
-        self.client = client
-        self.datasite_client = init_session(client.email)
+    def __init__(self, syftbox_client: SyftBoxClient):
+        self.syftbox_client = syftbox_client
+        self.rds_client = init_session(syftbox_client.email)
 
     async def create_dataset_from_shopify(
         self, url: str, name: str, pat: str, description: Optional[str] = None
@@ -29,7 +29,7 @@ class ShopifyService:
         """Create a dataset by importing data from Shopify."""
 
         # check if dataset name already exists
-        for dataset in self.datasite_client.datasets:
+        for dataset in self.rds_client.datasets:
             if dataset.name == name:
                 raise HTTPException(
                     status_code=409,
@@ -63,13 +63,13 @@ class ShopifyService:
             dummy_description_path.touch()
 
             # Create dataset
-            dataset = self.datasite_client.dataset.create(
+            dataset = self.rds_client.dataset.create(
                 name=name,
                 summary=description or f"Shopify data from {url}",
                 path=real_path,
                 mock_path=mock_path,
                 description_path=dummy_description_path,
-                auto_approval=get_auto_approve_list(self.client),
+                auto_approval=get_auto_approve_list(self.syftbox_client),
             )
 
             logger.debug(f"Shopify dataset created: {dataset}")
@@ -102,9 +102,13 @@ class ShopifyService:
                 real_dataset_path.write_text(dataset_df.to_csv())
 
                 # Update the dataset
-                dataset = self.datasite_client.dataset.update(
-                    DatasetUpdate(uid=dataset_uid)
+
+                dataset = self.rds_client.dataset.update(
+                    DatasetUpdate(
+                        uid=dataset_uid, name="UPDATED", summary="Update this one!"
+                    ),
                 )
+
                 logger.debug(f"Dataset synced: {dataset}")
 
                 return {"message": f"Dataset {dataset_uid} synced successfully"}

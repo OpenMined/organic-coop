@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends
-from syft_core import Client
+from syft_core import Client as SyftBoxClient
 
-from ..dependencies import get_client
+from ..dependencies import get_syftbox_client
 from ..services.job_service import JobService
 from ...models import ListJobsResponse
 
@@ -16,10 +16,10 @@ router = APIRouter(prefix="/jobs", tags=["jobs"])
     response_model=ListJobsResponse,
 )
 async def list_jobs(
-    client: Client = Depends(get_client),
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ) -> ListJobsResponse:
     """Get all jobs in the system."""
-    service = JobService(client)
+    service = JobService(syftbox_client)
     return await service.list_jobs()
 
 
@@ -30,9 +30,9 @@ async def list_jobs(
 )
 async def open_job_code(
     job_uid: str,
-    client: Client = Depends(get_client),
+    syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ):
     """Open job code directory in the system file browser."""
-    service = JobService(client)
+    service = JobService(syftbox_client)
     await service.open_job_code(job_uid)
     return {"message": f"Opened code directory for job {job_uid}"}

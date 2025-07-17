@@ -7,7 +7,7 @@ from fastapi import HTTPException, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
 from loguru import logger
 import requests
-from syft_core import Client
+from syft_core import Client as SyftBoxClient
 from syft_core.url import SyftBoxURL
 from syft_rds import init_session
 from syft_rds.models.models import DatasetUpdate
@@ -20,26 +20,28 @@ from ...utils import get_auto_approve_list
 class DatasetService:
     """Service class for dataset-related operations."""
 
-    def __init__(self, client: Client):
-        self.client = client
-        self.datasite_client = init_session(client.email)
+    def __init__(self, syftbox_client: SyftBoxClient):
+        self.syftbox_client = syftbox_client
+        self.rds_client = init_session(syftbox_client.email)
 
     async def list_datasets(self) -> ListDatasetsResponse:
         """List all datasets with proper formatting."""
         datasets = [
             DatasetModel.model_validate(dataset)
-            for dataset in self.datasite_client.dataset.get_all()
+            for dataset in self.rds_client.dataset.get_all()
         ]
 
         # Process datasets to fix temporary issues with RDS
         for dataset in datasets:
             private_file_path = next(dataset.private_path.iterdir(), None)
             dataset.private = SyftBoxURL.from_path(
-                private_file_path, self.client.workspace
+                private_file_path, self.syftbox_client.workspace
             )
 
             mock_file_path = next(dataset.mock_path.iterdir(), None)
-            dataset.mock = SyftBoxURL.from_path(mock_file_path, self.client.workspace)
+            dataset.mock = SyftBoxURL.from_path(
+                mock_file_path, self.syftbox_client.workspace
+            )
 
             dataset.readme = None
             dataset.private_size = (
@@ -87,13 +89,13 @@ class DatasetService:
                 dummy_description_path.touch()
 
                 # Create dataset in RDS
-                dataset = self.datasite_client.dataset.create(
+                dataset = self.rds_client.dataset.create(
                     name=name,
                     summary=description,
                     path=real_path,
                     mock_path=mock_path,
                     description_path=dummy_description_path,
-                    auto_approval=get_auto_approve_list(self.client),
+                    auto_approval=get_auto_approve_list(self.syftbox_client),
                 )
 
                 logger.debug(f"Dataset created: {dataset}")
@@ -105,10 +107,13 @@ class DatasetService:
             logger.error(f"Error creating dataset: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
+    async def update_dataset(self, dataset_update: DatasetUpdate) -> DatasetModel:
+        return self.rds_client.dataset.update(dataset_update)
+
     async def delete_dataset(self, dataset_name: str) -> JSONResponse:
         """Delete a dataset by name."""
         try:
-            delete_res = self.datasite_client.dataset.delete(dataset_name)
+            delete_res = self.rds_client.dataset.delete(dataset_name)
             if not delete_res:
                 raise HTTPException(
                     status_code=404, detail=f"Unable to delete dataset '{dataset_name}'"
@@ -128,7 +133,7 @@ class DatasetService:
     async def download_private_file(self, dataset_uuid: str) -> StreamingResponse:
         """Download the private file for a dataset."""
         try:
-            dataset = self.datasite_client.dataset.get(uid=dataset_uuid)
+            dataset = self.rds_client.dataset.get(uid=dataset_uuid)
             if not dataset:
                 raise HTTPException(
                     status_code=404,

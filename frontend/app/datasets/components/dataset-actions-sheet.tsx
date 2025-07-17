@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, useEffect } from "react"
 import { ActivityGraph } from "@/app/datasets/components/activity-graph"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import {
   Sheet,
   SheetContent,
@@ -24,19 +24,18 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { useToast } from "@/hooks/use-toast"
-import { AlertTriangle, Download, Edit, Trash2 } from "lucide-react"
 import { apiService } from "@/lib/api/api"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Dataset } from "@/lib/api/types"
-import { Separator } from "@/components/ui/separator"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { AlertTriangle, Download, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { UpdateDatasetModal } from "./update-shopify-dataset-modal"
 
 interface DatasetActionsSheetProps {
   dataset: Dataset | null
   open: boolean
   onOpenChange: (open: boolean) => void
 }
-
-type Action = "view" | "update"
 
 export function DatasetActionsSheet({
   dataset,
@@ -197,10 +196,7 @@ export function DatasetActionsSheet({
                   <Download className="mr-2 h-4 w-4" />
                   Download Dataset
                 </Button>
-                <Button variant="outline" className="w-full justify-start">
-                  <Edit className="mr-2 h-4 w-4" />
-                  Update Dataset
-                </Button>
+                <UpdateDatasetModal dataset={dataset} />
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"

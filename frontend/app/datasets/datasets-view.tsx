@@ -7,7 +7,7 @@ import { datasetsApi } from "@/lib/api/datasets"
 import type { Dataset } from "@/lib/api/types"
 import { useQuery } from "@tanstack/react-query"
 import { Database } from "lucide-react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { DatasetCard } from "./components/dataset-card"
 import { AddDatasetAction } from "./components/add-datasets-action"
 
@@ -26,6 +26,18 @@ export function DatasetsView() {
     setActionsSheetOpen(false)
     setTimeout(() => setSelectedDataset(null), 350)
   }
+
+  useEffect(() => {
+    if (!selectedDataset || !data) return
+
+    const updatedDataset = data.datasets.find(
+      (d) => d.uid === selectedDataset.uid,
+    )
+
+    if (!updatedDataset) return
+
+    setSelectedDataset(updatedDataset)
+  }, [data])
 
   return (
     <div className="space-y-6">
