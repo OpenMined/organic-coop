@@ -103,8 +103,6 @@ async def dataset_sync_shopify(
     syftbox_client: SyftBoxClient = Depends(get_syftbox_client),
 ):
     """Sync an existing dataset with its Shopify source."""
-    # await debug_delay(2.5)
-    # return
     shopify_service = ShopifyService(syftbox_client)
     return await shopify_service.sync_dataset(dataset_uid)
 
