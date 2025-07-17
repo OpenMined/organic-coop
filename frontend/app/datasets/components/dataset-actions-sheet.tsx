@@ -1,6 +1,5 @@
 "use client"
 
-import { useState, type Dispatch, type SetStateAction } from "react"
 import { ActivityGraph } from "@/app/datasets/components/activity-graph"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import {
@@ -15,6 +14,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
 import {
   Sheet,
   SheetContent,
@@ -24,42 +24,12 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet"
 import { useToast } from "@/hooks/use-toast"
-import {
-  AlertTriangle,
-  Download,
-  Edit,
-  FileDownIcon,
-  Loader2,
-  SaveIcon,
-  Trash2,
-} from "lucide-react"
 import { apiService } from "@/lib/api/api"
-import { useMutation, useQueryClient } from "@tanstack/react-query"
 import type { Dataset } from "@/lib/api/types"
-import { Separator } from "@/components/ui/separator"
-import {
-  Dialog,
-  DialogClose,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog"
-import { datasetsApi, UpdateShopifyDatasetFormSchema } from "@/lib/api/datasets"
-import { useForm } from "react-hook-form"
-import type z from "zod"
-import { zodResolver } from "@hookform/resolvers/zod"
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
-import { Input } from "@/components/ui/input"
-import { ApiError, FormFieldError } from "@/lib/api/errors"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+import { AlertTriangle, Download, Trash2 } from "lucide-react"
+import { useState } from "react"
+import { UpdateDatasetModal } from "./update-shopify-dataset-modal"
 
 interface DatasetActionsSheetProps {
   dataset: Dataset | null
@@ -226,7 +196,7 @@ export function DatasetActionsSheet({
                   <Download className="mr-2 h-4 w-4" />
                   Download Dataset
                 </Button>
-                <UpdateDatasetAction dataset={dataset} />
+                <UpdateDatasetModal dataset={dataset} />
                 <Button
                   variant="outline"
                   className="w-full justify-start text-red-600 hover:bg-red-50 hover:text-red-700"
@@ -281,110 +251,5 @@ export function DatasetActionsSheet({
         </AlertDialogContent>
       </AlertDialog>
     </>
-  )
-}
-
-function UpdateDatasetAction({ dataset }: { dataset: Dataset }) {
-  const { toast } = useToast()
-  const queryClient = useQueryClient()
-  const form = useForm<z.infer<typeof UpdateShopifyDatasetFormSchema>>({
-    resolver: zodResolver(UpdateShopifyDatasetFormSchema),
-    defaultValues: {
-      name: dataset.name,
-      description: dataset.description,
-    },
-  })
-
-  const { setError } = form
-
-  const updateShopifyDatasetMutation = useMutation({
-    mutationFn: datasetsApi.updateShopifyDataset,
-    onSuccess: () => {
-      toast({
-        title: "Success",
-        description: "Updated dataset",
-      })
-      return queryClient.invalidateQueries({ queryKey: ["datasets"] })
-    },
-    onError: (error) => {
-      if (error instanceof FormFieldError) {
-        //@ts-ignore
-        setError(error.loc, { message: error.message })
-      }
-      if (error instanceof ApiError) {
-        toast({ title: "Error", description: error.message })
-      }
-    },
-  })
-
-  function onSubmit(values: z.infer<typeof UpdateShopifyDatasetFormSchema>) {
-    updateShopifyDatasetMutation.mutate({ uid: dataset.uid, data: values })
-  }
-
-  const { isPending } = updateShopifyDatasetMutation
-
-  return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button variant="outline" className="w-full justify-start">
-          <Edit className="mr-2 h-4 w-4" />
-          Update Dataset
-        </Button>
-      </DialogTrigger>
-
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Update Dataset</DialogTitle>
-        </DialogHeader>
-        <Form {...form}>
-          <form
-            onSubmit={form.handleSubmit(onSubmit)}
-            className="flex flex-col gap-5"
-          >
-            <FormField
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <div className="relative w-full">
-                    <FormLabel>Dataset Name *</FormLabel>
-                    <FormMessage className="absolute top-1 right-0" />
-                  </div>
-                  <FormControl>
-                    <Input placeholder={dataset.name} {...field} />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-            <DialogFooter>
-              <DialogClose asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => {
-                    form.reset()
-                  }}
-                  disabled={isPending}
-                >
-                  Cancel
-                </Button>
-              </DialogClose>
-              <Button type="submit" disabled={isPending}>
-                {isPending ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Saving...
-                  </>
-                ) : (
-                  <>
-                    <SaveIcon className="h-4 w-4" />
-                    Save Change
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </Form>
-      </DialogContent>
-    </Dialog>
   )
 }

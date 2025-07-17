@@ -106,7 +106,8 @@ async def dataset_sync_shopify(
 
 
 class UpdateDatasetRequestBody(BaseModel):
-    name: str
+    name: Optional[str] = None
+    description: Optional[str] = None
 
 
 @router.put(
@@ -122,7 +123,7 @@ async def update_dataset(
     service = DatasetService(syftbox_client)
     try:
         return await service.update_dataset(
-            DatasetUpdate(uid=dataset_uid, name=data.name)
+            DatasetUpdate(uid=dataset_uid, name=data.name, summary=data.description)
         )
     except DatasetExistsError:
         raise HTTPException(
