@@ -107,9 +107,8 @@ class DatasetService:
             logger.error(f"Error creating dataset: {e}")
             raise HTTPException(status_code=500, detail=str(e))
 
-    async def update_dataset(self, dataset_update: DatasetUpdate):
-        dataset = self.rds_client.dataset.update(dataset_update)
-        return dataset
+    async def update_dataset(self, dataset_update: DatasetUpdate) -> DatasetModel:
+        return self.rds_client.dataset.update(dataset_update)
 
     async def delete_dataset(self, dataset_name: str) -> JSONResponse:
         """Delete a dataset by name."""
