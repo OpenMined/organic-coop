@@ -29,7 +29,7 @@ import type { Dataset } from "@/lib/api/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { AlertTriangle, Download, Trash2 } from "lucide-react"
 import { useState } from "react"
-import { UpdateDatasetModal } from "./update-shopify-dataset-modal"
+import { UpdateDatasetModal } from "./update-dataset-modal"
 
 interface DatasetActionsSheetProps {
   dataset: Dataset | null
