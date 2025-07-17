@@ -19,7 +19,7 @@ import { DatasetMetaBadge } from "./dataset-meta-badge"
 import { cn, timeAgo } from "@/lib/utils"
 import { ActivityGraph } from "./activity-graph"
 import { Button } from "@/components/ui/button"
-import { useMutation } from "@tanstack/react-query"
+import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { datasetsApi } from "@/lib/api/datasets"
 
 export function DatasetCard({
@@ -168,8 +168,11 @@ export function DatasetCard({
 }
 
 function SyncShopifyDatasetAction({ dataset }: { dataset: Dataset }) {
+  const queryClient = useQueryClient()
+
   const syncDatasetMutation = useMutation({
     mutationFn: datasetsApi.syncShopifyDataset,
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ["datasets"] }),
   })
 
   const { isPending } = syncDatasetMutation
