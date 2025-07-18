@@ -129,7 +129,7 @@ async def create_dataset(
             mock_dataset_path = mock_path / f"{dataset.filename}"
 
             # Hardcoded GitHub raw CSV URL
-            github_csv_url = "https://raw.githubusercontent.com/OpenMined/datasets/refs/heads/main/enclave/crop_stock_data.csv"
+            github_csv_url = "https://raw.githubusercontent.com/OpenMined/datasets/refs/heads/main/enclave/organic-coop/data/crop_stock_data_mock.csv"
             try:
                 response = requests.get(github_csv_url)
                 response.raise_for_status()
