@@ -874,7 +874,7 @@ wheels = [
 [[package]]
 name = "syft-rds"
 version = "0.1.1.dev3"
-source = { git = "https://github.com/OpenMined/rds.git?branch=organic-coop#0d30f8524c75acbac11171b97f3fd00c88f8eeed" }
+source = { git = "https://github.com/OpenMined/rds.git?branch=organic-coop#3291dd9e6fae88f339a6a1bd17e619a2639fc613" }
 dependencies = [
     { name = "cryptography" },
     { name = "ipython" },
