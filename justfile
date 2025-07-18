@@ -53,7 +53,7 @@ dev config_path="":
 
     # concurrently run the server and frontend
     bunx concurrently --names "server,frontend" --prefix-colors "red,green" \
-        "uv run uvicorn backend.main:app --reload --port ${API_PORT}" \
+        "uv run --no-sync uvicorn backend.main:app --reload --port ${API_PORT}" \
         "NEXT_PUBLIC_API_URL=http://localhost:${API_PORT} bun run --cwd frontend dev"
 
 [group('server')]
