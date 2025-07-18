@@ -82,7 +82,7 @@ export function UpdateDatasetModal({ dataset }: { dataset: Dataset }) {
     <Dialog>
       <DialogTrigger asChild>
         <Button variant="outline" className="w-full justify-start">
-          <Edit className="mr-2 h-4 w-4" />
+          <Edit className="h-4 w-4" />
           Update Dataset
         </Button>
       </DialogTrigger>

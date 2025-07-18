@@ -109,6 +109,9 @@ export const datasetsApi = {
     return apiClient.put<{}>(`/api/v1/datasets/update/${uid}`, data)
   },
   syncShopifyDataset: (uid: string) => {
-    return apiClient.post<{}>("/api/v1/datasets/sync-shopify", { uid })
+    return apiClient.put<{}>(`/api/v1/datasets/sync-shopify-dataset/${uid}`, {})
+  },
+  openLocalDirectory: (uid: string) => {
+    return apiClient.get(`/api/v1/datasets/open-local-directory/${uid}`)
   },
 }

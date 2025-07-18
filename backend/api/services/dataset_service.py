@@ -1,7 +1,8 @@
 # backend/api/services/dataset_service.py
 from pathlib import Path
 import tempfile
-from typing import Iterator
+from typing import Iterator, Literal
+import webbrowser
 
 from fastapi import HTTPException, UploadFile
 from fastapi.responses import JSONResponse, StreamingResponse
@@ -11,6 +12,7 @@ from syft_core import Client as SyftBoxClient
 from syft_core.url import SyftBoxURL
 from syft_rds import init_session
 from syft_rds.models.models import DatasetUpdate
+from syft_rds.client.exceptions import DatasetNotFoundError
 
 from ...models import ListDatasetsResponse, Dataset as DatasetModel
 from ...sources import find_source
@@ -185,3 +187,16 @@ class DatasetService:
                 status_code=400,
                 detail=f"Failed to download mock dataset from GitHub: {e}",
             )
+
+    async def open_local_directory(
+        self, dataset_uid: str, which: Literal["private", "mock"] = "private"
+    ):
+        dataset = self.rds_client.dataset.get(uid=dataset_uid)
+        if not dataset:
+            raise DatasetNotFoundError(f"Dataset with uid {dataset_uid} does not exist")
+
+        path = dataset.private_path
+        if which == "mock":
+            path = dataset.mock_path
+
+        webbrowser.open(f"file://{path}")

@@ -35,8 +35,6 @@ class JobService:
 
             # Open the job's code directory
             webbrowser.open(f"file://{job.user_code.local_dir}")
-            logger.debug(f"Opened code directory for job {job_uid}")
-
         except HTTPException:
             raise
         except Exception as e:
