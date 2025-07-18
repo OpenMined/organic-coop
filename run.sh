@@ -16,6 +16,8 @@ trap 'kill $RDS_PID' EXIT
 
 # Set default port if not provided
 SYFTBOX_ASSIGNED_PORT=${SYFTBOX_ASSIGNED_PORT:-8080}
+
+export API_PORT=${SYFTBOX_ASSIGNED_PORT}
 export NEXT_PUBLIC_API_URL=http://localhost:${SYFTBOX_ASSIGNED_PORT}
 
 # build the frontend app

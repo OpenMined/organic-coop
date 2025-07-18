@@ -37,7 +37,7 @@ export default function Providers({ children }: { children: ReactNode }) {
 
   return (
     <StateDebuggerProvider show={false}>
-      <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
+      <ThemeProvider attribute="class" enableSystem>
         <DragDropProvider>
           <QueryClientProvider client={queryClient}>
             <TooltipProvider delayDuration={0}>{children}</TooltipProvider>

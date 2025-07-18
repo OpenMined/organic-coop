@@ -1,15 +1,11 @@
-# Standard library imports
+import os
 from typing import Optional
-
-# Third-party imports
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
 from backend.lib.html_static_files import HTMLStaticFiles
 
-# Local imports
 from .api import api_router
 from .config import get_settings
 
@@ -29,15 +25,20 @@ app = FastAPI(
         400: {"model": ErrorResponse, "description": "Bad Request"},
     },
 )
+
+API_PORT = os.environ.get("API_PORT") or "8000"
+allow_origins = [f"http://localhost:{API_PORT}", f"http://127.0.0.1:{API_PORT}"]
+
 if get_settings().debug:
-    print("SHOULD HAVE MIDDLEWARE")
-    app.add_middleware(
-        CORSMiddleware,
-        allow_origins=["http://localhost:3000"],
-        allow_credentials=True,
-        allow_methods=["*"],
-        allow_headers=["*"],
-    )
+    allow_origins.append("http://localhost:3000")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=allow_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 app.include_router(api_router)
 app.mount("/", HTMLStaticFiles(directory="frontend/out", html=True, check_dir=False))

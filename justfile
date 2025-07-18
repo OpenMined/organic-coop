@@ -49,10 +49,12 @@ dev config_path="":
         export SYFTBOX_CLIENT_CONFIG_PATH="${config_path}"
     fi
 
+    export API_PORT=8001
+
     # concurrently run the server and frontend
     bunx concurrently --names "server,frontend" --prefix-colors "red,green" \
-        "uv run uvicorn backend.main:app --reload --port 8001" \
-        "NEXT_PUBLIC_API_URL=http://localhost:8001 bun run --cwd frontend dev"
+        "uv run uvicorn backend.main:app --reload --port ${API_PORT}" \
+        "NEXT_PUBLIC_API_URL=http://localhost:${API_PORT} bun run --cwd frontend dev"
 
 [group('server')]
 prod config_path="":

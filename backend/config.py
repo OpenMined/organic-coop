@@ -1,8 +1,6 @@
-# Standard library imports
 from functools import lru_cache
 from typing import Optional
 
-# Third-party imports
 from pydantic_settings import BaseSettings
 
 
