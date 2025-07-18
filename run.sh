@@ -19,6 +19,6 @@ SYFTBOX_ASSIGNED_PORT=${SYFTBOX_ASSIGNED_PORT:-8080}
 export NEXT_PUBLIC_API_URL=http://localhost:${SYFTBOX_ASSIGNED_PORT}
 
 # build the frontend app
-uvx bun run --cwd frontend build
+uvx --directory frontend pybun run build
 
 uv run uvicorn backend.main:app --reload --host 0.0.0.0 --port "$SYFTBOX_ASSIGNED_PORT"
