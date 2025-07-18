@@ -136,7 +136,7 @@ class ShopifyService:
 
     async def _download_mock_dataset(self, mock_dataset_path: Path) -> None:
         """Download mock dataset from GitHub."""
-        github_csv_url = "https://raw.githubusercontent.com/OpenMined/datasets/refs/heads/main/enclave/crop_stock_data.csv"
+        github_csv_url = "https://raw.githubusercontent.com/OpenMined/datasets/refs/heads/main/enclave/organic-coop/data/part_1/crop_stock_mock_1.csv"
         try:
             response = requests.get(github_csv_url)
             response.raise_for_status()
