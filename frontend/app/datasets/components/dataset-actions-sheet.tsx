@@ -110,7 +110,7 @@ export function DatasetActionsSheet({
   return (
     <>
       <Sheet open={open} onOpenChange={onOpenChange}>
-        <SheetContent className="-mr-1">
+        <SheetContent className="scrollbar-thin overflow-y-auto">
           <SheetHeader>
             <SheetTitle className="text-2xl">{dataset.name}</SheetTitle>
             <SheetDescription>{dataset.description}</SheetDescription>
