@@ -194,6 +194,10 @@
   text-wrap: balance;
 }
 
+@utility scrollbar-thin {
+  scrollbar-width: thin;
+}
+
 @utility debug {
   @apply outline-2 -outline-offset-1 outline-red-500/70 outline-solid;
 }
