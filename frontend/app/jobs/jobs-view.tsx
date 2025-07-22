@@ -34,6 +34,8 @@ export function JobsView() {
   )
 }
 
+import { useMutation, useQueryClient } from "@tanstack/react-query"
+
 function JobsSection() {
   const jobsQuery = useQuery({
     queryKey: ["jobs"],
@@ -41,6 +43,16 @@ function JobsSection() {
       const result = await apiService.getJobs()
       return result
     },
+  })
+  const queryClient = useQueryClient()
+
+  const approveMutation = useMutation({
+    mutationFn: (jobUid: string) => jobsApi.approveJob(jobUid),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
+  })
+  const rejectMutation = useMutation({
+    mutationFn: (jobUid: string) => jobsApi.rejectJob(jobUid),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["jobs"] }),
   })
 
   const getJobsByStatus = (jobs: Job[], status: Job["status"]) => {
@@ -113,9 +125,7 @@ function JobsSection() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                // onClick={() =>
-                                //   handleJobAction(job.uid, "approve")
-                                // }
+                                onClick={() => approveMutation.mutate(job.uid)}
                                 className="border-emerald-500 text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 dark:border-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-900/30"
                               >
                                 <Check className="mr-2 h-4 w-4" />
@@ -124,7 +134,7 @@ function JobsSection() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                // onClick={() => handleJobAction(job.uid, "deny")}
+                                onClick={() => rejectMutation.mutate(job.uid)}
                                 className="border-red-500 text-red-600 hover:bg-red-50 hover:text-red-700 dark:border-red-700 dark:text-red-400 dark:hover:bg-red-900/30"
                               >
                                 <X className="mr-2 h-4 w-4" />
