@@ -1,4 +1,5 @@
 version = 1
+revision = 1
 requires-python = ">=3.12"
 
 [[package]]
@@ -124,7 +125,7 @@ name = "click"
 version = "8.2.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "colorama", marker = "platform_system == 'Windows'" },
+    { name = "colorama", marker = "sys_platform == 'win32'" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/60/6c/8ca2efa64cf75a977a0d7fac081354553ebe483345c734fb6b6515d96bbc/click-8.2.1.tar.gz", hash = "sha256:27c491cc05d968d271d5a1db13e3b5a184636d9d930f148c50b038f0d0646202", size = 286342 }
 wheels = [
@@ -498,7 +499,7 @@ requires-dist = [
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "requests", specifier = ">=2.32.0" },
     { name = "syft-core", specifier = ">=0.2.3" },
-    { name = "syft-rds", git = "https://github.com/OpenMined/rds.git?branch=organic-coop" },
+    { name = "syft-rds", specifier = "==0.1.1.dev5" },
     { name = "uvicorn", specifier = ">=0.34.2" },
 ]
 
@@ -873,8 +874,8 @@ wheels = [
 
 [[package]]
 name = "syft-rds"
-version = "0.1.1.dev3"
-source = { git = "https://github.com/OpenMined/rds.git?branch=organic-coop#3291dd9e6fae88f339a6a1bd17e619a2639fc613" }
+version = "0.1.1.dev5"
+source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "cryptography" },
     { name = "ipython" },
@@ -889,6 +890,10 @@ dependencies = [
     { name = "syft-rpc" },
     { name = "typer" },
     { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/42/bd/fc982a97f862da61982a811deafbbd2cd2d758826f1f153b65d768d9347b/syft_rds-0.1.1.dev5.tar.gz", hash = "sha256:132890a772cc776f5fd710dbe034d05f6405a7fc14da16d2c5784110c41dc761", size = 163323 }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c1/06/4e2b4cda757d52790da087d46685b79adcceed327592dca8f2c7f45786aa/syft_rds-0.1.1.dev5-py3-none-any.whl", hash = "sha256:072951c19c0f81b7caecaf4b1df4fd66c386e897aaa0f042b9fe790a038477ba", size = 191392 },
 ]
 
 [[package]]
