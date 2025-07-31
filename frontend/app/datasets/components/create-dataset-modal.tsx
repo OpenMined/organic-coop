@@ -2,11 +2,11 @@
 
 import type React from "react"
 
+import { toast } from "sonner"
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/hooks/use-toast"
 import {
   Dialog,
   DialogContent,
@@ -32,7 +32,6 @@ export function CreateDatasetModal({
   onOpenChange,
   onSuccess,
 }: CreateDatasetModalProps) {
-  const { toast } = useToast()
   const [file, setFile] = useState<File | null>(null)
   const [name, setName] = useState("")
   const [description, setDescription] = useState("")
@@ -51,12 +50,9 @@ export function CreateDatasetModal({
 
   const createDatasetMutation = useMutation({
     mutationFn: apiService.createDataset,
-    onSuccess: (data) => {
+    onSuccess: (data, variables) => {
       queryClient.invalidateQueries({ queryKey: ["datasets"] })
-      toast({
-        title: "Success",
-        description: data.message,
-      })
+      toast(`Dataset ${variables.get("name")} created`)
       onSuccess?.()
     },
   })
@@ -188,14 +184,14 @@ export function CreateDatasetModal({
               />
               <label htmlFor="dataset-file" className="block cursor-pointer">
                 <div className="space-y-2">
-                  <FolderOpen className="mx-auto h-8 w-8 text-muted-foreground" />
+                  <FolderOpen className="text-muted-foreground mx-auto h-8 w-8" />
                   <div className="text-sm">
-                    <span className="font-medium text-primary hover:underline">
+                    <span className="text-primary font-medium hover:underline">
                       {activeDropZone === "create-dataset" && isDragging
                         ? "Drop your file here"
                         : "Drop your file here or click to select"}
                     </span>
-                    <p className="mt-1 text-muted-foreground">
+                    <p className="text-muted-foreground mt-1">
                       Choose your dataset file
                     </p>
                   </div>
@@ -203,7 +199,7 @@ export function CreateDatasetModal({
               </label>
             </div>
             {file && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-muted-foreground text-sm">
                 Selected: {file.name}
               </p>
             )}

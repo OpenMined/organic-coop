@@ -104,7 +104,8 @@ async def dataset_sync_shopify(
 ):
     """Sync an existing dataset with its Shopify source."""
     shopify_service = ShopifyService(syftbox_client)
-    return await shopify_service.sync_dataset(dataset_uid)
+    dataset = await shopify_service.sync_dataset(dataset_uid)
+    return {"dataset": dataset}
 
 
 class UpdateDatasetRequestBody(BaseModel):
