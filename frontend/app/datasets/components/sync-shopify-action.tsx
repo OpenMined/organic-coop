@@ -1,20 +1,19 @@
 import { Button } from "@/components/ui/button"
-import { useToast } from "@/hooks/use-toast"
 import { datasetsApi } from "@/lib/api/datasets"
 import type { Dataset } from "@/lib/api/types"
 import { useMutation, useQueryClient } from "@tanstack/react-query"
 import { RefreshCwIcon } from "lucide-react"
 import { useRef } from "react"
+import { toast } from "sonner"
 
 export function SyncShopifyDatasetAction({ dataset }: { dataset: Dataset }) {
-  const { toast } = useToast()
   const queryClient = useQueryClient()
   const iconWrapperRef = useRef<HTMLSpanElement>(null)
 
   const syncDatasetMutation = useMutation({
     mutationFn: datasetsApi.syncShopifyDataset,
     onSuccess: () => {
-      toast({ title: "Success", description: "Dataset synced successfully." })
+      toast.success("Dataset synced successfully")
     },
     onSettled: () => {
       if (iconWrapperRef.current) {
